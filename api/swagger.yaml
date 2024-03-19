@@ -44,6 +44,10 @@ definitions:
         type: object
       vmPath:
         type: string
+      pid:
+        type: integer
+      ip:
+        type: string
   Snapshot:
     type: object
     required:
@@ -270,6 +274,24 @@ paths:
         '400':
           $ref: '#/responses/400Error'
   '/snapshots/{ssId}':
+    post:
+      description: Load a snapshot
+      parameters:
+        - name: ssId
+          in: path
+          type: string
+          required: true
+        - name: invocation
+          in: body
+          schema:
+            $ref: '#/definitions/Invocation'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/VM'
+        '400':
+          $ref: '#/responses/400Error'
     patch:
       description: Change snapshot state
       parameters:

@@ -140,6 +140,19 @@ func configureAPI(api *operations.FaasnapAPI) http.Handler {
 		}
 		return &operations.PatchSnapshotsSsIDMincoreOK{}
 	})
+	api.PostSnapshotsSsIDHandler = operations.PostSnapshotsSsIDHandlerFunc(func(params operations.PostSnapshotsSsIDParams) middleware.Responder {
+		vm, err := daemon.LoadSnapshot(params.HTTPRequest, params.Invocation, "")
+		if err != nil {
+			return &operations.PostSnapshotsSsIDBadRequest{Payload: &operations.PostSnapshotsSsIDBadRequestBody{Message: err.Error()}}
+		}
+		return &operations.PostSnapshotsSsIDOK{Payload: &models.VM{
+			VMID:  &vm.VmId,
+			IP:    vm.VMNetwork.UniqueAddr,
+			Pid:   int64(vm.Process.Pid),
+			State: vm.State,
+		}}
+	})
+
 	api.PostVmsHandler = operations.PostVmsHandlerFunc(func(params operations.PostVmsParams) middleware.Responder {
 		vmId, err := daemon.StartVM(params.HTTPRequest, params.VM.FuncName, params.VM.SsID, params.VM.Namespace)
 		if err != nil {

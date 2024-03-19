@@ -69,7 +69,7 @@ type Network struct {
 	IfaceId     string `json:"iface_id"`
 	GuestMac    string `json:"guest_mac"`
 	guestAddr   string
-	uniqueAddr  string
+	UniqueAddr  string
 }
 
 type VmConfig struct {
@@ -90,7 +90,7 @@ type VM struct {
 	VmPath      string    `json:"vmPath"`
 	MincoreSize int       `json:"mincoreSize"`
 	ReapId      string    `json:"reapId"`
-	process     *os.Process
+	Process     *os.Process
 	httpc       *http.Client
 	Snapshot    *Snapshot
 }
@@ -161,7 +161,7 @@ func NewVMController(config *Config) *VMController {
 
 func (vc *VMController) AddNetwork(req *http.Request, namespace, hostDevName, ifaceId, guestMac, guestAddr, uniqueAddr string) error {
 	// TODO: verify
-	vc.Networks[namespace] = &Network{namespace: namespace, HostDevName: hostDevName, IfaceId: ifaceId, GuestMac: guestMac, guestAddr: guestAddr, uniqueAddr: uniqueAddr}
+	vc.Networks[namespace] = &Network{namespace: namespace, HostDevName: hostDevName, IfaceId: ifaceId, GuestMac: guestMac, guestAddr: guestAddr, UniqueAddr: uniqueAddr}
 	return nil
 }
 
@@ -260,7 +260,7 @@ func (vc *VMController) StartVM(ctx *context.Context, function, kernel, image, n
 		VMNetwork: netIface,
 		VmConf:    conf,
 		VmPath:    vmPath,
-		process:   cmd.Process,
+		Process:   cmd.Process,
 	}
 
 	vc.Lock()
@@ -294,7 +294,7 @@ func (vc *VMController) StopVM(req *http.Request, vmID string) error {
 			vm.Snapshot.records = make([]uint64, len(records))
 			copy(vm.Snapshot.records, records)
 		}
-		if err := vm.process.Signal(syscall.SIGTERM); err != nil {
+		if err := vm.Process.Signal(syscall.SIGTERM); err != nil {
 			log.Println("Error calling Signal:", err)
 			log.Println("Not critical if 'process already finished' because userpagefault already deactivated")
 		}
@@ -426,7 +426,7 @@ func (vc *VMController) StartVMM(ctx context.Context, enableReap bool, namespace
 	return "", fmt.Errorf("VMM for %s failed", vm.VmId)
 }
 
-func (vc *VMController) LoadSnapshot(r *http.Request, snapshot *Snapshot, invoc *models.Invocation, reapId string) (string, error) {
+func (vc *VMController) LoadSnapshot(r *http.Request, snapshot *Snapshot, invoc *models.Invocation, reapId string) (*VM, error) {
 	var (
 		vmId string
 		vm   *VM
@@ -472,7 +472,7 @@ func (vc *VMController) LoadSnapshot(r *http.Request, snapshot *Snapshot, invoc 
 		}
 		vm, err = vc.startVMM(r.Context(), fcExecutable, invoc.Namespace)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		span.End()
 	}
@@ -482,13 +482,13 @@ func (vc *VMController) LoadSnapshot(r *http.Request, snapshot *Snapshot, invoc 
 	vm.Dial()
 	span.End()
 
-	log.Println("VM pid:", vm.process.Pid)
+	log.Println("VM pid:", vm.Process.Pid)
 	// time.Sleep(20 * time.Second)
-	return vc.loadSnapshot(r.Context(), vm, snapshot, invoc, reapId)
+	return vm, vc.loadSnapshot(r.Context(), vm, snapshot, invoc, reapId)
 
 }
 
-func (vc *VMController) loadSnapshot(ctx context.Context, vm *VM, snapshot *Snapshot, invoc *models.Invocation, reapId string) (string, error) {
+func (vc *VMController) loadSnapshot(ctx context.Context, vm *VM, snapshot *Snapshot, invoc *models.Invocation, reapId string) error {
 	var (
 		err       error
 		span      *trace.Span
@@ -519,7 +519,7 @@ func (vc *VMController) loadSnapshot(ctx context.Context, vm *VM, snapshot *Snap
 		dataBytes, err = json.Marshal(params)
 		if err != nil {
 			log.Println(err)
-			return "", err
+			return err
 		}
 	} else {
 		params := struct {
@@ -560,7 +560,7 @@ func (vc *VMController) loadSnapshot(ctx context.Context, vm *VM, snapshot *Snap
 		dataBytes, err = json.Marshal(params)
 		if err != nil {
 			log.Println(err)
-			return "", err
+			return err
 		}
 	}
 
@@ -573,23 +573,23 @@ func (vc *VMController) loadSnapshot(ctx context.Context, vm *VM, snapshot *Snap
 	if err != nil {
 		log.Println("http://localhost/snapshot/load", vm.VmId, err)
 		span.End()
-		return "", err
+		return err
 	}
 	span.End()
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return err
 	}
 	if resp.StatusCode > 299 {
 		log.Println(resp)
-		return "", errors.New("loading snapshot failed")
+		return errors.New("loading snapshot failed")
 	}
 
 	data := "{\"state\": \"Resumed\"}"
 	req, err = http.NewRequest("PATCH", "http://localhost/vm", strings.NewReader(data))
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return err
 	}
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
@@ -598,16 +598,16 @@ func (vc *VMController) loadSnapshot(ctx context.Context, vm *VM, snapshot *Snap
 	span.End()
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return err
 	}
 	if resp.StatusCode < 300 {
 		log.Println(vm.VmId, "resumed")
 	} else {
 		log.Println("resuming", vm.VmId, "response:", resp)
-		return "", errors.New("resuming failed")
+		return errors.New("resuming failed")
 	}
 	vm.Snapshot = snapshot
-	return vm.VmId, nil
+	return nil
 }
 
 func (vc *VMController) startVMM(ctx context.Context, fcExecutable, namespace string) (*VM, error) {
@@ -682,7 +682,7 @@ func (vc *VMController) startVMM(ctx context.Context, fcExecutable, namespace st
 		VMNetwork: netIface,
 		VmConf:    nil,
 		VmPath:    vmPath,
-		process:   cmd.Process,
+		Process:   cmd.Process,
 	}
 
 	vc.Lock()
@@ -713,7 +713,7 @@ func (vc *VMController) InvokeFunction(r *http.Request, vmID string, function st
 	}
 
 	client := &http.Client{}
-	url := fmt.Sprintf("%s://%s/invoke?function=%s&redishost=%s&redispasswd=%s", "http", vm.VMNetwork.uniqueAddr+":5000", function, vc.config.RedisHost, vc.config.RedisPasswd)
+	url := fmt.Sprintf("%s://%s/invoke?function=%s&redishost=%s&redispasswd=%s", "http", vm.VMNetwork.UniqueAddr+":5000", function, vc.config.RedisHost, vc.config.RedisPasswd)
 	log.Println("requesting ", url, " with params: ", params)
 	newReq, err := http.NewRequest("POST", url, bytes.NewReader([]byte(params)))
 	newReq.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -744,7 +744,7 @@ func (vc *VMController) InvokeFunction(r *http.Request, vmID string, function st
 
 func (vm *VM) getDmesg(context context.Context) ([]byte, error) {
 	client := &http.Client{}
-	url := fmt.Sprintf("%s://%s/%s", "http", vm.VMNetwork.uniqueAddr+":5000", "dmesg")
+	url := fmt.Sprintf("%s://%s/%s", "http", vm.VMNetwork.UniqueAddr+":5000", "dmesg")
 	newReq, err := http.NewRequest("GET", url, bytes.NewReader([]byte{}))
 	if err != nil {
 		log.Println(err)

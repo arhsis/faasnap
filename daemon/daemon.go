@@ -20,7 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
 package daemon
 
 import (
@@ -262,19 +261,19 @@ func TakeSnapshot(req *http.Request, vmID string, snapshotType string, snapshotP
 	return snap.SnapshotId, nil
 }
 
-func LoadSnapshot(req *http.Request, invoc *models.Invocation, reapId string) (string, error) {
+func LoadSnapshot(req *http.Request, invoc *models.Invocation, reapId string) (*VM, error) {
 	snapshot, ok := ssManager.Snapshots[invoc.SsID]
 	if !ok {
 		log.Println("snapshot not exists")
-		return "", errors.New("snapshot not exists")
+		return nil, errors.New("snapshot not exists")
 	}
-	vmID, err := vmController.LoadSnapshot(req, snapshot, invoc, reapId)
+	vm, err := vmController.LoadSnapshot(req, snapshot, invoc, reapId)
 	if err != nil {
 		log.Println("load snapshot failed")
-		return "", err
+		return nil, err
 	}
 
-	return vmID, nil
+	return vm, nil
 }
 
 func ChangeSnapshot(req *http.Request, ssID string, digHole, loadCache, dropCache bool) error {
@@ -296,7 +295,7 @@ func PutNetwork(req *http.Request, namespace, hostDevName, ifaceId, guestMac, gu
 }
 
 func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string, string, error) {
-	var vm string
+	var vmId string
 	var snapshot *Snapshot
 	var finished chan bool
 	var scan bool
@@ -315,7 +314,7 @@ func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string
 			log.Println("VM not exists")
 			return "", "", traceId, errors.New("VM not exists")
 		}
-		vm = invoc.VMID
+		vmId = invoc.VMID
 	case invoc.SsID != "":
 		// snapshot start
 		var err error
@@ -339,16 +338,20 @@ func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string
 				}
 				resultChan <- err
 			}()
-			if vm, err = LoadSnapshot(req, invoc, reapId); err != nil {
+			vm, err := LoadSnapshot(req, invoc, reapId)
+			vmId = vm.VmId
+			if err != nil {
 				log.Println("Snapshot start invocation failed")
 				return "", "", traceId, err
 			}
 			if err := <-resultChan; err != nil {
 				return "", "", traceId, err
 			}
-			vmController.Machines[vm].ReapId = reapId
+			vmController.Machines[vmId].ReapId = reapId
 		} else {
-			if vm, err = LoadSnapshot(req, invoc, ""); err != nil {
+			vm, err := LoadSnapshot(req, invoc, "")
+			vmId = vm.VmId
+			if err != nil {
 				log.Println("Snapshot start invocation failed")
 				return "", "", traceId, err
 			}
@@ -356,7 +359,7 @@ func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string
 	default:
 		// cold start
 		var err error
-		if vm, err = DoStartVM(req.Context(), *invoc.FuncName, invoc.Namespace); err != nil {
+		if vmId, err = DoStartVM(req.Context(), *invoc.FuncName, invoc.Namespace); err != nil {
 			log.Println("Cold start invocation failed")
 			return "", "", traceId, err
 		}
@@ -375,7 +378,7 @@ func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string
 
 	if scan {
 		finished = make(chan bool)
-		go snapshot.ScanMincore(req, vmController.Machines[vm].process.Pid, int(*invoc.Mincore), int(invoc.MincoreSize), finished)
+		go snapshot.ScanMincore(req, vmController.Machines[vmId].Process.Pid, int(*invoc.Mincore), int(invoc.MincoreSize), finished)
 		defer func() {
 			go func() {
 				finished <- true
@@ -383,7 +386,7 @@ func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string
 		}()
 	}
 
-	resp, err := vmController.InvokeFunction(req, vm, *invoc.FuncName, invoc.Params)
+	resp, err := vmController.InvokeFunction(req, vmId, *invoc.FuncName, invoc.Params)
 	if err != nil {
 		return "", "", traceId, err
 	}
@@ -396,7 +399,7 @@ func InvokeFunction(req *http.Request, invoc *models.Invocation) (string, string
 	// 	}()
 	// }
 
-	return resp, vm, traceId, nil
+	return resp, vmId, traceId, nil
 }
 
 func ChangeReapCacheState(req *http.Request, ssID string, cache bool) error {
