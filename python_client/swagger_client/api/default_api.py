@@ -214,7 +214,7 @@ class DefaultApi(object):
 
         :param async_req bool
         :param Invocation invocation:
-        :return: object
+        :return: InlineResponse2001
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -236,7 +236,7 @@ class DefaultApi(object):
 
         :param async_req bool
         :param Invocation invocation:
-        :return: object
+        :return: InlineResponse2001
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -282,7 +282,7 @@ class DefaultApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='object',  # noqa: E501
+            response_type='InlineResponse2001',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -669,7 +669,7 @@ class DefaultApi(object):
 
         :param async_req bool
         :param str ss_id: (required)
-        :return: object
+        :return: InlineResponse200
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -691,7 +691,7 @@ class DefaultApi(object):
 
         :param async_req bool
         :param str ss_id: (required)
-        :return: object
+        :return: InlineResponse200
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -741,7 +741,7 @@ class DefaultApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='object',  # noqa: E501
+            response_type='InlineResponse200',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -760,7 +760,7 @@ class DefaultApi(object):
 
         :param async_req bool
         :param str ss_id: (required)
-        :param State state: (required)
+        :param State1 state: (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -783,7 +783,7 @@ class DefaultApi(object):
 
         :param async_req bool
         :param str ss_id: (required)
-        :param State state: (required)
+        :param State1 state: (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -1768,7 +1768,7 @@ class DefaultApi(object):
         >>> result = thread.get()
 
         :param async_req bool
-        :param VM vm:
+        :param VM1 vm:
         :return: VM
                  If the method is called asynchronously,
                  returns the request thread.
@@ -1790,7 +1790,7 @@ class DefaultApi(object):
         >>> result = thread.get()
 
         :param async_req bool
-        :param VM vm:
+        :param VM1 vm:
         :return: VM
                  If the method is called asynchronously,
                  returns the request thread.

@@ -22,6 +22,8 @@ main
 # Swagger generated
 cmd
 kernel
-models
+/models
 restapi/*
 !restapi/configure_faasnap.go
+
+.DS_Store

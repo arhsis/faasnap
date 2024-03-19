@@ -118,7 +118,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **invocations_post**
-> object invocations_post(invocation=invocation)
+> InlineResponse2001 invocations_post(invocation=invocation)
 
 
 
@@ -151,7 +151,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**object**
+[**InlineResponse2001**](InlineResponse2001.md)
 
 ### Authorization
 
@@ -237,7 +237,7 @@ except ApiException as e:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **namespace** | **str**|  | 
- **interface** | [**Interface**](.md)|  | [optional] 
+ **interface** | [**Interface**](Interface.md)|  | [optional] 
 
 ### Return type
 
@@ -351,7 +351,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **snapshots_ss_id_mincore_get**
-> object snapshots_ss_id_mincore_get(ss_id)
+> InlineResponse200 snapshots_ss_id_mincore_get(ss_id)
 
 
 
@@ -384,7 +384,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**object**
+[**InlineResponse200**](InlineResponse200.md)
 
 ### Authorization
 
@@ -415,7 +415,7 @@ from pprint import pprint
 # create an instance of the API class
 api_instance = swagger_client.DefaultApi()
 ss_id = 'ss_id_example' # str | 
-state = swagger_client.State() # State | 
+state = swagger_client.State1() # State1 | 
 
 try:
     api_instance.snapshots_ss_id_mincore_patch(ss_id, state)
@@ -428,7 +428,7 @@ except ApiException as e:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ss_id** | **str**|  | 
- **state** | [**State**](.md)|  | 
+ **state** | [**State1**](State1.md)|  | 
 
 ### Return type
 
@@ -476,7 +476,7 @@ except ApiException as e:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ss_id** | **str**|  | 
- **layer** | [**Layer**](.md)|  | 
+ **layer** | [**Layer**](Layer.md)|  | 
 
 ### Return type
 
@@ -572,7 +572,7 @@ except ApiException as e:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ss_id** | **str**|  | 
- **state** | [**State**](.md)|  | [optional] 
+ **state** | [**State**](State.md)|  | [optional] 
 
 ### Return type
 
@@ -843,7 +843,7 @@ except ApiException as e:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **vmm** | [**VMM**](.md)|  | [optional] 
+ **vmm** | [**VMM**](VMM.md)|  | [optional] 
 
 ### Return type
 
@@ -920,7 +920,7 @@ from pprint import pprint
 
 # create an instance of the API class
 api_instance = swagger_client.DefaultApi()
-vm = swagger_client.VM() # VM |  (optional)
+vm = swagger_client.VM1() # VM1 |  (optional)
 
 try:
     api_response = api_instance.vms_post(vm=vm)
@@ -933,7 +933,7 @@ except ApiException as e:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **vm** | [**VM**](.md)|  | [optional] 
+ **vm** | [**VM1**](VM1.md)|  | [optional] 
 
 ### Return type
 

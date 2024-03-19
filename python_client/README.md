@@ -17,9 +17,9 @@ Python 2.7 and 3.4+
 If the python package is hosted on Github, you can install directly from Github
 
 ```sh
-pip install git+https://github.com//.git
+pip install git+https://github.com/GIT_USER_ID/GIT_REPO_ID.git
 ```
-(you may need to run `pip` with root permission: `sudo pip install git+https://github.com//.git`)
+(you may need to run `pip` with root permission: `sudo pip install git+https://github.com/GIT_USER_ID/GIT_REPO_ID.git`)
 
 Then import the package:
 ```python
@@ -95,9 +95,18 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [Function](docs/Function.md)
+ - [InlineResponse200](docs/InlineResponse200.md)
+ - [InlineResponse2001](docs/InlineResponse2001.md)
+ - [InlineResponse400](docs/InlineResponse400.md)
+ - [Interface](docs/Interface.md)
  - [Invocation](docs/Invocation.md)
+ - [Layer](docs/Layer.md)
  - [Snapshot](docs/Snapshot.md)
+ - [State](docs/State.md)
+ - [State1](docs/State1.md)
  - [VM](docs/VM.md)
+ - [VM1](docs/VM1.md)
+ - [VMM](docs/VMM.md)
 
 
 ## Documentation For Authorization
