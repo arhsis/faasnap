@@ -69,7 +69,7 @@ type Network struct {
 	IfaceId     string `json:"iface_id"`
 	GuestMac    string `json:"guest_mac"`
 	guestAddr   string
-	UniqueAddr  string
+	UniqueAddr  string `json:"-"`
 }
 
 type VmConfig struct {
@@ -81,16 +81,16 @@ type VmConfig struct {
 
 type VM struct {
 	sync.Mutex
-	VmId        string    `json:"vmId"`
-	Function    string    `json:"function"`
-	State       string    `json:"state"`
-	Socket      string    `json:"socket"`
-	VMNetwork   *Network  `json:"net"`
-	VmConf      *VmConfig `json:"vmConf"`
-	VmPath      string    `json:"vmPath"`
-	MincoreSize int       `json:"mincoreSize"`
-	ReapId      string    `json:"reapId"`
-	Process     *os.Process
+	VmId        string      `json:"vmId"`
+	Function    string      `json:"function"`
+	State       string      `json:"state"`
+	Socket      string      `json:"socket"`
+	VMNetwork   *Network    `json:"net"`
+	VmConf      *VmConfig   `json:"vmConf"`
+	VmPath      string      `json:"vmPath"`
+	MincoreSize int         `json:"mincoreSize"`
+	ReapId      string      `json:"reapId"`
+	Process     *os.Process `json:"-"`
 	httpc       *http.Client
 	Snapshot    *Snapshot
 }
