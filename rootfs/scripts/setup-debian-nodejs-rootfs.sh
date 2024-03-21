@@ -7,7 +7,9 @@ echo root:rootroot | chpasswd
 # apt install -y tcpdump build-essential pkg-config python3-setuptools python-dev python3-dev gcc libpq-dev python-pip python3-dev python3-pip python3-venv python3-wheel
 source /root/.bashrc
 npm config set registry https://registry.npmmirror.com
-npm install -g express@4.16.2 body-parser@1.18.2 sharp@0.32.6
+pushd /app/
+npm install express@4.16.2 body-parser@1.18.2 sharp@0.32.6
+popd
 
 mkdir -p /etc/systemd/system/serial-getty@ttyS0.service.d/
 cat <<EOF > /etc/systemd/system/serial-getty@ttyS0.service.d/autologin.conf
@@ -32,9 +34,9 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=root=
+User=root
 Environment="NODE_ENV=production"
-ExecStart=node /app/daemon.js
+ExecStart=bash -c "source /root/.bashrc && node /app/daemon.js"
 WorkingDirectory=/app
 [Install]
 WantedBy=multi-user.target
