@@ -2,3 +2,5 @@
 *.ext4
 
 mountpoint
+
+guest/python/image_recognition/model/*

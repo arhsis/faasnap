@@ -3,6 +3,11 @@ import six
 import json
 from chameleon import PageTemplate
 
+# {
+#     "num_of_rows": 1000,
+#     "num_of_cols": 1000
+# }
+
 
 BIGTABLE_ZPT = """\
 <table xmlns="http://www.w3.org/1999/xhtml"
@@ -17,11 +22,12 @@ tal:content="python: d" />
 </table>""" % six.text_type.__name__
 
 
-def lambda_handler(event, context):
-    num_of_rows = int(event['num_of_rows'])
-    num_of_cols = int(event['num_of_cols'])
-
+def handle(event, context):
     start = time()
+    req = json.loads(event.body.decode())
+    num_of_rows = req['num_of_rows']
+    num_of_cols = req['num_of_cols']
+
     tmpl = PageTemplate(BIGTABLE_ZPT)
 
     data = {}
@@ -32,6 +38,9 @@ def lambda_handler(event, context):
     options = {'table': table}
 
     data = tmpl.render(options=options)
-    end = time()
+    latency = time() - start
 
-    return [start, end]
+    return {
+        "statusCode": 200,
+        "body":{'latency': latency, 'data': data} 
+    }

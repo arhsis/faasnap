@@ -1,8 +1,9 @@
-import uuid
-from time import time
+from os import path
 from PIL import Image, ImageFilter
 
-TMP = '/dev/shm/'
+SCRIPT_DIR = path.abspath(path.join(path.dirname(__file__)))
+TMP = '/tmp/'
+
 
 def flip(image, file_name):
     path_list = []
@@ -39,7 +40,7 @@ def rotate(image, file_name):
     return path_list
 
 
-def imgfilter(image, file_name):
+def filter(image, file_name):
     path_list = []
     path = TMP + "blur-" + file_name
     img = image.filter(ImageFilter.BLUR)
@@ -71,35 +72,3 @@ def resize(image, file_name):
     image.thumbnail((128, 128))
     image.save(path)
     return [path]
-
-def image_processing(file_name, image_path):
-    path_list = []
-    start = time()
-    with Image.open(image_path) as image:
-        tmp = image
-        # path_list += flip(image, file_name)
-        path_list += rotate(image, file_name)
-        # path_list += imgfilter(image, file_name)
-        # path_list += gray_scale(image, file_name)
-        # path_list += resize(image, file_name)
-
-    latency = time() - start
-    return latency, path_list
-
-
-def lambda_handler(event, context):
-    in_key = event['input_object_key']
-    out_key_prefix = event['output_object_key_prefix']
-    r = context['r']
-
-    download_path = TMP + in_key
-    with open(download_path, 'wb') as f:
-        f.write(r.get(in_key))
-    ts1 = time()
-    latency, path_list = image_processing(in_key, download_path)
-    ts2 = time()
-    for upload_path in path_list:
-        with open(upload_path, 'rb') as f:
-            r.set(out_key_prefix+upload_path.split("/")[-1], f.read())
-
-    return [ts1, ts2]
