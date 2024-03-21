@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from waitress import serve
 import os
-import time
 
 app = Flask(__name__)
 
@@ -16,7 +15,7 @@ class Event:
 
 def invoke(funcname, event, context):
     if funcname.startswith("chameleon"):
-        from chameleon import handler as chameleon
+        from Chameleon import handler as chameleon
         return chameleon.handle(event, context)
     elif funcname.startswith("dynamic-html"):
         from dynamic_html import handler as dynamic_html
