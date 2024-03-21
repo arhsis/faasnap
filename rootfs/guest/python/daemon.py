@@ -33,7 +33,7 @@ def invoke(funcname, event, context):
         from image_recognition import handler as image_recognition
         return image_recognition.handle(event, context)
     elif funcname.startswith("pyaes"):
-        from pyaes import handler as pyaes
+        from Pyaes import handler as pyaes
         return pyaes.handle(event, context)
     elif funcname.startswith("video-processing"):
         from video_processing import handler as video_processing

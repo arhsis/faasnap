@@ -112,18 +112,19 @@ const middleware = async (req, res) => {
   const fnEvent = new FunctionEvent(req);
   const fnContext = new FunctionContext(cb);
 
-  Promise.resolve(() => {
+  new Promise((resolve, reject) => {
     if (fnEvent.query.function.startsWith("crypto")) {
       const handler = require("./crypto/handler");
-      return handler(fnEvent, fnContext, cb);
+      resolve(handler(fnEvent, fnContext, cb));
     } else if (fnEvent.query.function.startsWith("image-flip-rotate")) {
       const handler = require("./image_flip_rotate/handler");
-      return handler(fnEvent, fnContext, cb);
+      resolve(handler(fnEvent, fnContext, cb));
     } else {
-      throw new Error("Function not found");
+      reject("Function not found");
     }
   })
     .then((res) => {
+      console.log(res);
       if (!fnContext.cbCalled) {
         fnContext.succeed(res);
       }
@@ -140,7 +141,7 @@ app.put("/*", middleware);
 app.delete("/*", middleware);
 app.options("/*", middleware);
 
-const port = process.env.upstream_port || 3000;
+const port = process.env.upstream_port || 5000;
 
 app.listen(port, () => {
   console.log(`node18 listening on port: ${port}`);
