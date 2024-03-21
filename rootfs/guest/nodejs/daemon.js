@@ -113,15 +113,14 @@ const middleware = async (req, res) => {
   const fnContext = new FunctionContext(cb);
 
   Promise.resolve(() => {
-    switch (fnEvent.query.function) {
-      case "crypto":
-        const handler = require("./crypto/handler");
-        return handler(fnEvent, fnContext, cb);
-      case "image-flip-rotate":
-        const handler = require("./image_flip_rotate/handler");
-        return handler(fnEvent, fnContext, cb);
-      default:
-        throw new Error("Function not found");
+    if (fnEvent.query.function.startsWith("crypto")) {
+      const handler = require("./crypto/handler");
+      return handler(fnEvent, fnContext, cb);
+    } else if (fnEvent.query.function.startsWith("image-flip-rotate")) {
+      const handler = require("./image_flip_rotate/handler");
+      return handler(fnEvent, fnContext, cb);
+    } else {
+      throw new Error("Function not found");
     }
   })
     .then((res) => {
