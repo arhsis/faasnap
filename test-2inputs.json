@@ -142,7 +142,7 @@
         "h-memory": {
             "id": "h-memory",
             "name": "h-memory",
-            "image": "debian",
+            "image": "debian-python",
             "kernel": "v4.14",
             "params": [
                 "{\"size\": 12345678}",
