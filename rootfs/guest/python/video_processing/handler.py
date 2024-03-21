@@ -6,7 +6,7 @@ import cv2
 SCRIPT_DIR = path.abspath(path.join(path.dirname(__file__)))
 VIDEO_DIR = path.join(SCRIPT_DIR, 'video')
 VIDEO_PATH = path.join(VIDEO_DIR, 'sample-3s.mp4')
-OUTPUT_PATH = path.join('/tmp', 'sample-gray.mp4')
+OUTPUT_PATH = path.join('/run', 'sample-gray.mp4')
 
 def handle(event, context):
     start = time()
