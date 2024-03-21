@@ -4,14 +4,16 @@ set -ex
 echo "debian" > /etc/hostname
 echo root:rootroot | chpasswd
 
-apt install -y libhdf5-dev gpg wget libblas3 liblapack3 liblapack-dev libblas-dev gfortran
+apt install -y gpg wget
 wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-linux-x86_64.tar.gz -O /opt/cmake-3.22.2-linux-x86_64.tar.gz
 pushd /opt
 tar xzvf cmake-3.22.2-linux-x86_64.tar.gz
 export PATH=$PATH:/opt/cmake-3.22.2-linux-x86_64/bin/
 popd
 # apt install -y tcpdump build-essential pkg-config python3-setuptools python-dev python3-dev gcc libpq-dev python-pip python3-dev python3-pip python3-venv python3-wheel
-pip3 install wheel six scikit-learn==0.23.0 flask redis pillow pyaes Chameleon pandas tensorflow grpcio==1.36.1 igraph torch==1.10.2 torchvision==0.11.3 # torchaudio==0.10.2+cpu #opencv-contrib-python 
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip setuptools wheel
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple flask waitress Chameleon jinja2 numpy opencv-python-headless pillow==6.2.2 psutil pyaes python-igraph six torch==1.10.2 torchvision==0.11.3
+pip3 install --extra-index-url https://download.pytorch.org/whl/cpu torch==2.0.1+cpu torchvision==0.2.1
 
 mkdir -p /etc/systemd/system/serial-getty@ttyS0.service.d/
 cat <<EOF > /etc/systemd/system/serial-getty@ttyS0.service.d/autologin.conf
@@ -55,7 +57,8 @@ Restart=always
 RestartSec=1
 User=root
 Environment="FLASK_APP=/app/daemon.py"
-ExecStart=python3 -m flask run --host=172.16.0.2
+ExecStart=python3 /app/daemon.py
+WorkingDirectory=/app
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -81,4 +84,4 @@ systemctl enable function-daemon.service
 
 systemctl disable systemd-timesyncd.service
 systemctl disable systemd-update-utmp.service
-systemctl disable redis-server.service
+# systemctl disable redis-server.service
