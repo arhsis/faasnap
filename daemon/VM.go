@@ -738,6 +738,9 @@ func (vc *VMController) InvokeFunction(r *http.Request, vmID string, function st
 		return string(body), nil
 	} else {
 		log.Println("invoking", function, "response:", resp)
+		if body, err := ioutil.ReadAll(resp.Body); err == nil {
+			log.Println("response body:", string(body))
+		}
 		return "", errors.New("invoking failed")
 	}
 }
