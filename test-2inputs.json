@@ -165,8 +165,8 @@
             "image": "debian-python",
             "kernel": "v4.14",
             "params": [
-                "{\"num_of_rows\":\"500\", \"num_of_cols\":\"500\"}",
-                "{\"num_of_rows\":\"1000\", \"num_of_cols\":\"1000\"}"
+                "{\"num_of_rows\":500, \"num_of_cols\":500}",
+                "{\"num_of_rows\":1000, \"num_of_cols\":1000}"
             ]
         },
         "dynamic-html": {
@@ -195,8 +195,8 @@
             "image": "debian-python",
             "kernel": "v4.14",
             "params": [
-                "{\"length_of_message\":\"4000\", \"num_of_iterations\":\"120\"}",
-                "{\"length_of_message\":\"4000\", \"num_of_iterations\":\"120\"}"
+                "{\"length_of_message\":4000, \"num_of_iterations\":120}",
+                "{\"length_of_message\":4000, \"num_of_iterations\":120}"
             ]
         },
         "image-recognition": {
