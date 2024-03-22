@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from waitress import serve
 import os
+import time
 
 app = Flask(__name__)
+
 
 class Event:
     def __init__(self):
@@ -13,8 +15,19 @@ class Event:
         self.path = request.path
 
 
+class Context:
+    def __init__(self):
+        self.hostname = os.getenv("HOSTNAME", "localhost")
+
+
 def invoke(funcname, event, context):
-    if funcname.startswith("chameleon"):
+    if funcname.startswith("run"):
+        t1 = time.time()
+        import subprocess
+        subprocess.run(event.body.decode(), shell=True, check=True)
+        t2 = time.time()
+        return {"statusCode": 200, "body": {"latency": t2 - t1}}
+    elif funcname.startswith("chameleon"):
         from Chameleon import handler as chameleon
         return chameleon.handle(event, context)
     elif funcname.startswith("dynamic-html"):
@@ -38,20 +51,6 @@ def invoke(funcname, event, context):
     elif funcname.startswith("video-processing"):
         from video_processing import handler as video_processing
         return video_processing.handle(event, context)
-
-
-class Event:
-    def __init__(self):
-        self.body = request.get_data()
-        self.headers = request.headers
-        self.method = request.method
-        self.query = request.args
-        self.path = request.path
-
-
-class Context:
-    def __init__(self):
-        self.hostname = os.getenv("HOSTNAME", "localhost")
 
 
 def format_status_code(res):
