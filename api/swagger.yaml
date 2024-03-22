@@ -150,6 +150,8 @@ paths:
               $ref: '#/definitions/Function'
     post:
       description: Create a new function
+      consumes:
+        - application/json
       parameters:
         - name: function
           in: body
@@ -172,6 +174,8 @@ paths:
               $ref: '#/definitions/VM'
     post:
       description: Create a new VM
+      consumes:
+        - application/json
       parameters:
         - name: VM
           in: body
@@ -243,6 +247,8 @@ paths:
   /snapshots:
     post:
       description: Take a snapshot
+      consumes:
+        - application/json
       parameters:
         - name: snapshot
           in: body
@@ -276,6 +282,8 @@ paths:
   '/snapshots/{ssId}':
     post:
       description: Load a snapshot
+      consumes:
+        - application/json
       parameters:
         - name: ssId
           in: path
@@ -294,6 +302,8 @@ paths:
           $ref: '#/responses/400Error'
     patch:
       description: Change snapshot state
+      consumes:
+        - application/json
       parameters:
         - name: ssId
           in: path
@@ -383,6 +393,8 @@ paths:
           $ref: '#/responses/400Error'
     patch:
       description: Change mincore state
+      consumes:
+        - application/json
       parameters:
         - name: ssId
           in: path
@@ -465,6 +477,8 @@ paths:
   '/net-ifaces/{namespace}':
     put:
       description: Put a vm network
+      consumes:
+        - application/json
       parameters:
         - name: namespace
           in: path
@@ -494,6 +508,8 @@ paths:
   /invocations:
     post:
       description: Post an invocation
+      consumes:
+        - application/json
       parameters:
         - name: invocation
           in: body
