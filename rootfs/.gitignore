@@ -4,3 +4,5 @@
 mountpoint
 
 guest/python/image_recognition/model/*
+
+node_modules

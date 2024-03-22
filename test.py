@@ -87,7 +87,7 @@ def prepareMincore(params, client: DefaultApi, setting, func, func_param, par_sn
     ret = client.invocations_post(invocation=invoc)
     newVmID = ret.vm_id
     print('prepare invoc ret:', ret)
-    ret = client.invocations_post(invocation=faasnap.Invocation(func_name='run', vm_id=newVmID, params="{\"args\":\"echo 8 > /proc/sys/vm/drop_caches\"}", mincore=-1, enable_reap=False)) # disable sanitizing
+    ret = client.invocations_post(invocation=faasnap.Invocation(func_name='run', vm_id=newVmID, params="{\"command\": \"echo 8 > /proc/sys/vm/drop_caches\"}", mincore=-1, enable_reap=False)) # disable sanitizing
     warm_snap = client.snapshots_post(snapshot=faasnap.Snapshot(vm_id=newVmID, snapshot_type='Full', snapshot_path=params.test_dir+'/Warm.snapshot', mem_file_path=params.test_dir+'/Warm.memfile', version='0.23.0', **vars(setting.record_regions)))
     all_snaps.append(warm_snap)
     client.vms_vm_id_delete(vm_id=newVmID)

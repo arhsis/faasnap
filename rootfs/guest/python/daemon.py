@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from waitress import serve
 import os
 import time
+import json
 
 app = Flask(__name__)
 
@@ -24,7 +25,8 @@ def invoke(funcname, event, context):
     if funcname.startswith("run"):
         t1 = time.time()
         import subprocess
-        subprocess.run(event.body.decode(), shell=True, check=True)
+        req = json.loads(event.body.decode())
+        subprocess.run(req["command"], shell=True, check=True)
         t2 = time.time()
         return {"statusCode": 200, "body": {"latency": t2 - t1}}
     elif funcname.startswith("chameleon"):

@@ -115,7 +115,7 @@ const middleware = async (req, res) => {
   new Promise((resolve, reject) => {
     if (fnEvent.query.function == "run") {
       const { exec } = require("child_process");
-      exec(fnEvent.body, (error, stdout, stderr) => {
+      exec(fnEvent.body.command, (error, stdout, stderr) => {
         if (error) {
           reject(`error: ${error.message}`);
           return;

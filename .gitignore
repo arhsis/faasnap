@@ -27,3 +27,6 @@ restapi/*
 !restapi/configure_faasnap.go
 
 .DS_Store
+
+vm
+snapshot
