@@ -156,5 +156,5 @@ if __name__ == "__main__":
 
     print("ssIds:", ssIds)
 
-    with open("/snapshots.json", "w") as f:
+    with open("./snapshot/snapshots.json", "w") as f:
         json.dump(ssIds, f, default=lambda o: o.__dict__)
