@@ -145,8 +145,8 @@
             "image": "debian-python",
             "kernel": "v4.14",
             "params": [
-                "{\"size\": 12345678}",
-                "{\"size\": 12345678}"
+                "{\"size\": 134217728}",
+                "{\"size\": 134217728}"
             ]
         },
         "h-hello-world": {
@@ -165,8 +165,8 @@
             "image": "debian-python",
             "kernel": "v4.14",
             "params": [
-                "{\"num_of_rows\":500, \"num_of_cols\":500}",
-                "{\"num_of_rows\":1000, \"num_of_cols\":1000}"
+                "{\"num_of_rows\":700, \"num_of_cols\":400}",
+                "{\"num_of_rows\":700, \"num_of_cols\":400}"
             ]
         },
         "dynamic-html": {
@@ -175,8 +175,8 @@
             "image": "debian-python",
             "kernel": "v4.14",
             "params": [
-                "{\"username\": \"Peking\", \"random_len\": 1554}",
-                "{\"username\": \"Peking\", \"random_len\": 1554}"
+                "{\"username\": \"Tsinghua\", \"random_len\": 1000}",
+                "{\"username\": \"Tsinghua\", \"random_len\": 1000}"
             ]
         },
         "image-processing": {
@@ -195,8 +195,8 @@
             "image": "debian-python",
             "kernel": "v4.14",
             "params": [
-                "{\"length_of_message\":4000, \"num_of_iterations\":120}",
-                "{\"length_of_message\":4000, \"num_of_iterations\":120}"
+                "{\"length_of_message\":2000, \"num_of_iterations\":200}",
+                "{\"length_of_message\":2000, \"num_of_iterations\":200}"
             ]
         },
         "image-recognition": {
@@ -225,8 +225,8 @@
             "image": "debian-nodejs",
             "kernel": "v4.14",
             "params": [
-                "{\"length_of_message\":\"2000\", \"num_of_iterations\":\"10000\"}",
-                "{\"length_of_message\":\"2000\", \"num_of_iterations\":\"10000\"}"
+                "{\"length_of_message\":2000, \"num_of_iterations\":5000}",
+                "{\"length_of_message\":2000, \"num_of_iterations\":5000}"
             ]
         },
         "image-flip-rotate": {
