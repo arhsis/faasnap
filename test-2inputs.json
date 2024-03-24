@@ -232,7 +232,7 @@
         "image-flip-rotate": {
             "id": "image-flip-rotate",
             "name": "image-flip-rotate",
-            "image": "debian-python",
+            "image": "debian-nodejs",
             "kernel": "v4.14",
             "params": [
                 "",
