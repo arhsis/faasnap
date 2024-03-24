@@ -90,8 +90,10 @@ def prepareMincore(
     client.snapshots_ss_id_mincore_put(
         ss_id=warm_snap.ss_id, source=base_snap.ss_id
     )  # carry over mincore to new snapshot
+    state = vars(setting.patch_mincore)
+    state["to_ws_file"] = params.test_dir + f"/{func_name}_wsfile"
     client.snapshots_ss_id_mincore_patch(
-        ss_id=warm_snap.ss_id, state=vars(setting.patch_mincore)
+        ss_id=warm_snap.ss_id, state=state
     )
     client.snapshots_ss_id_patch(
         ss_id=base_snap.ss_id, state=vars(setting.patch_base_state)
@@ -116,7 +118,7 @@ if __name__ == "__main__":
     conf = Configuration()
     conf.host = params.host
 
-    params.settings.faasnap.patch_mincore.to_ws_file = params.test_dir + "/wsfile"
+    # params.settings.faasnap.patch_mincore.to_ws_file = params.test_dir + "/wsfile"
 
     with open("/etc/faasnap.json", "w") as f:
         json.dump(
@@ -154,6 +156,7 @@ if __name__ == "__main__":
 
         time.sleep(1)
 
+    print("========== DONE ==========")
     print("ssIds:", ssIds)
 
     with open("./snapshot/snapshots.json", "w") as f:
