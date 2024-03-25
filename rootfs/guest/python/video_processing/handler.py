@@ -4,9 +4,11 @@ import json
 import cv2
 
 SCRIPT_DIR = path.abspath(path.join(path.dirname(__file__)))
-VIDEO_DIR = path.join(SCRIPT_DIR, 'video')
-VIDEO_PATH = path.join(VIDEO_DIR, 'sample-3s.mp4')
-OUTPUT_PATH = path.join('/run', 'sample-gray.mp4')
+VIDEO_DIR = path.join(SCRIPT_DIR, "video")
+VIDEO_PATH = path.join(VIDEO_DIR, "sample-3s.mp4")
+OUTPUT_PATH = "/run"
+OUTPUT_FILE = path.join(OUTPUT_PATH, "sample-gray.mp4")
+
 
 def handle(event, context):
     start = time()
@@ -15,15 +17,15 @@ def handle(event, context):
     width = int(video.get(3))
     height = int(video.get(4))
 
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(OUTPUT_PATH, fourcc, 20.0, (width, height))
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out = cv2.VideoWriter(OUTPUT_FILE, fourcc, 20.0, (width, height))
 
     while video.isOpened():
         ret, frame = video.read()
 
         if ret:
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            tmp_file_path = path.join(VIDEO_DIR, 'tmp.jpg')
+            tmp_file_path = path.join(OUTPUT_PATH, "tmp.jpg")
             cv2.imwrite(tmp_file_path, gray_frame)
             gray_frame = cv2.imread(tmp_file_path)
             out.write(gray_frame)
@@ -36,6 +38,5 @@ def handle(event, context):
     latency = time() - start
     return {
         "statusCode": 200,
-        "body": {'latency': latency, 'data': OUTPUT_PATH},
+        "body": {"latency": latency, "data": OUTPUT_FILE},
     }
-
