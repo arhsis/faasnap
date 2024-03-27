@@ -1,26 +1,27 @@
 {
     "faasnap": {
         "log_level": "Warning",
-        "base_path": "",
+        "base_path": "/mnt/data/faasnap/vm",
         "kernels": {
-            "v4.14": "",
-            "sanpage": ""
+            "v4.14": "/mnt/data/faasnap-kernel/vmlinux",
+            "sanpage": "/mnt/data/faasnap-kernel/vmlinux"
         },
         "images": {
-            "debian": ""
+            "debian-python": "/mnt/data/faasnap/rootfs/debian-python-rootfs.ext4",
+            "debian-nodejs": "/mnt/data/faasnap/rootfs/debian-nodejs-rootfs.ext4"
         },
         "executables": {
-            "vanilla": "",
-            "uffd": ""
+            "vanilla": "/mnt/data/faasnap-firecracker/build/cargo_target/x86_64-unknown-linux-musl/debug/firecracker",
+            "uffd": "/mnt/data/faasnap-firecracker/build/cargo_target/x86_64-unknown-linux-musl/debug/firecracker"
         },
         "redis_host": "",
         "redis_passwd": ""
     },
 
-    "home_dir": "",
-    "host": "http://<ip>:8080",
-    "trace_api": "http://<ip>:9411/api/v2/trace",
-    "test_dir": "",
+    "home_dir": "/mnt/data/faasnap",
+    "host": "http://localhost:8080",
+    "trace_api": "http://localhost:9411/api/v2/trace",
+    "test_dir": "/mnt/data/faasnap/snapshot",
 
     "repeat": 1,
     "parallelism": [1],
@@ -30,22 +31,21 @@
     "vcpu": 2,
 
     "setting": [
-        "vanilla",
-        "vanilla-cache",
-        "reap",
         "faasnap"
     ],
     "function": [
         "h-memory",
         "h-hello-world",
-        "chameleon",
         "dynamic-html",
         "image-processing",
         "pyaes",
         "image-recognition",
         "video-processing",
         "crypto",
-        "image-flip-rotate"
+        "image-flip-rotate",
+        "json-serde",
+        "js-json-serde",
+        "pagerank"
     ],
     "settings": {
         "vanilla": {
@@ -237,6 +237,36 @@
             "params": [
                 "",
                 ""
+            ]
+        },
+        "js-json-serde": {
+            "id": "js-json-serde",
+            "name": "js-json-serde",
+            "image": "debian-nodejs",
+            "kernel": "v4.14",
+            "params": [
+                "{\"name\": \"2\"}",
+                "{\"name\": \"5\"}"
+            ]
+        },
+        "json-serde": {
+            "id": "json-serde",
+            "name": "json-serde",
+            "image": "debian-python",
+            "kernel": "v4.14",
+            "params": [
+                "{\"name\": \"2\"}",
+                "{\"name\": \"3\"}"
+            ]
+        },
+        "pagerank": {
+            "id": "pagerank",
+            "name": "pagerank",
+            "image": "debian-python",
+            "kernel": "v4.14",
+            "params": [
+                "{\"size\": 70000}",
+                "{\"size\": 75000, \"out\": 12}"
             ]
         }
     }

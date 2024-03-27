@@ -86,7 +86,13 @@ def prepareMincore(params, client: DefaultApi, setting, func, func_param, par_sn
     invoc = faasnap.Invocation(func_name=func.name, ss_id=base_snap.ss_id, params=func_param, mincore=mincore, mincore_size=setting.mincore_size, enable_reap=False, namespace='fc%d'%1, use_mem_file=True)
     ret = client.invocations_post(invocation=invoc)
     newVmID = ret.vm_id
-    print('prepare invoc ret:', ret)
+    try:
+        r = ret.to_dict()['result']
+        r = json.loads(r)
+        print(f"prepare invoc func lat: {r['latency']}")
+    except Exception as e:
+        print(f'prepare invoc func err: {e}')
+    # print('prepare invoc ret:', ret)
     ret = client.invocations_post(invocation=faasnap.Invocation(func_name='run', vm_id=newVmID, params="{\"command\": \"echo 8 > /proc/sys/vm/drop_caches\"}", mincore=-1, enable_reap=False)) # disable sanitizing
     warm_snap = client.snapshots_post(snapshot=faasnap.Snapshot(vm_id=newVmID, snapshot_type='Full', snapshot_path=params.test_dir+'/Warm.snapshot', mem_file_path=params.test_dir+'/Warm.memfile', version='0.23.0', **vars(setting.record_regions)))
     all_snaps.append(warm_snap)
@@ -183,7 +189,13 @@ def invoke(args):
         bpfpipe.wait()
     clients[idx].vms_vm_id_delete(vm_id=ret.vm_id)
     trace_id = ret.trace_id
-    print('invoke', runId, 'ret:', ret)
+    try:
+        r = ret.to_dict()['result']
+        r = json.loads(r)
+        print(f"prepare invoc func lat: {r['latency']}")
+    except Exception as e:
+        print(f'prepare invoc func err: {e}')
+    # print('invoke', runId, 'ret:', ret)
     time.sleep(2)
     if RESULT_DIR:
         directory = '%s/%s/%s' % (RESULT_DIR, TESTID, runId)

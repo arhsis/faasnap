@@ -11,7 +11,7 @@
         },
         "executables": {
             "vanilla": "",
-            "uffd": ""
+            "uffd": "/mnt/data/faasnap-firecracker/build/cargo_target/x86_64-unknown-linux-musl/debug/firecracker"
         },
         "redis_host": "",
         "redis_passwd": ""

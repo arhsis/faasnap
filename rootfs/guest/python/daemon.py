@@ -53,7 +53,13 @@ def invoke(funcname, event, context):
     elif funcname.startswith("video-processing"):
         from video_processing import handler as video_processing
         return video_processing.handle(event, context)
-
+    elif funcname.startswith("json-serde"):
+        from json_serde import handler as json_serde
+        return json_serde.handle(event, context)
+    elif funcname.startswith("pagerank"):
+        from pagerank import handler as pagerank
+        return pagerank.handle(event, context)
+    
 
 def format_status_code(res):
     if "statusCode" in res:

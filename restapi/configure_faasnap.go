@@ -236,10 +236,10 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics.
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	var port = 8080
-	var zipkinHost = "http://localhost:9411"
+	//var port = 8080
+	//var zipkinHost = "http://localhost:9411"
 
-	registerZipkin(zipkinHost, port)
+  //registerZipkin(zipkinHost, port)
 	h := &ochttp.Handler{Handler: handler}
 	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
 		log.Fatal("Failed to register ochttp.DefaultServerViews")

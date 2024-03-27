@@ -132,6 +132,9 @@ const middleware = async (req, res) => {
     } else if (fnEvent.query.function.startsWith("image-flip-rotate")) {
       const handler = require("./image_flip_rotate/handler");
       resolve(handler(fnEvent, fnContext, cb));
+    } else if (fnEvent.query.function.startsWith("js-json-serde")) {
+      const handler = require("./js-json-serde/handler");
+      resolve(handler(fnEvent, fnContext, cb));
     } else {
       reject("Function not found");
     }
