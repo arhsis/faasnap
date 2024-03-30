@@ -159,5 +159,7 @@ if __name__ == "__main__":
     print("========== DONE ==========")
     print("ssIds:", ssIds)
 
-    with open("./snapshot/snapshots.json", "w") as f:
+    if not os.path.isdir(params.test_dir):
+        os.mkdir(params.test_dir)
+    with open(os.path.join(params.test_dir, "snapshots.json"), "w") as f:
         json.dump(ssIds, f, default=lambda o: o.__dict__)
