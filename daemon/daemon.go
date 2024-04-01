@@ -269,7 +269,7 @@ func LoadSnapshot(req *http.Request, invoc *models.Invocation, reapId string) (*
 	}
 	vm, err := vmController.LoadSnapshot(req, snapshot, invoc, reapId)
 	if err != nil {
-		log.Println("load snapshot failed")
+		log.Println("load snapshot failed:", err)
 		return nil, err
 	}
 

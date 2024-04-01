@@ -161,8 +161,8 @@ func NewVMController(config *Config) *VMController {
 
 func (vc *VMController) AddNetwork(req *http.Request, namespace, hostDevName, ifaceId, guestMac, guestAddr, uniqueAddr string) error {
 	// TODO: verify
-  vc.Lock()
-  defer vc.Unlock()
+	vc.Lock()
+	defer vc.Unlock()
 	vc.Networks[namespace] = &Network{namespace: namespace, HostDevName: hostDevName, IfaceId: ifaceId, GuestMac: guestMac, guestAddr: guestAddr, UniqueAddr: uniqueAddr}
 	return nil
 }
@@ -723,8 +723,17 @@ func (vc *VMController) InvokeFunction(r *http.Request, vmID string, function st
 		log.Println(err)
 		return "", err
 	}
+	time.Sleep(4 * time.Second)
 	_, span := trace.StartSpan(r.Context(), "invoke_"+function)
-	resp, err := client.Do(newReq)
+	var resp *http.Response
+	for i := 0; i <= 1000; i++ {
+		resp, err = client.Do(newReq)
+		if err == nil {
+			break
+		}
+		log.Printf("Request failed: %s, retrying %d", err, i+1)
+		time.Sleep(50 * time.Millisecond)
+	}
 	span.End()
 	if err != nil {
 		log.Println(err)
