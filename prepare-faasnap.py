@@ -197,6 +197,9 @@ if __name__ == "__main__":
     client = faasnap.DefaultApi(faasnap.ApiClient(conf))
 
     for index, func in enumerate(params["function"], start=1):
+        if func in ssIds:
+            print(f"========== {func} already prepared ==========")
+            continue
         try:
             print(f"========== preparing: {func} ==========")
             add_network(client, index)
