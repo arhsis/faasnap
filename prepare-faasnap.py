@@ -3,6 +3,7 @@ import os
 import time
 import sys
 import json
+import argparse
 
 sys.path.extend(["./python_client"])
 from swagger_client.api.default_api import DefaultApi
@@ -156,13 +157,20 @@ def prepare_reap(params, client: DefaultApi, setting, func_name, func_param, nam
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: %s <mode> <test.json>" % sys.argv[0])
-        exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=["faasnap", "reap"], help="prepare for faasnap or reap")
+    parser.add_argument("config", help="config file")
+    parser.add_argument(
+        "--incremental", "-i",
+        action=argparse.BooleanOptionalAction,
+        help="incremental prepare",
+    )
+    parser.add_argument("--exclude", "-e", nargs="+", help="exclude functions")
+    args = parser.parse_args()
 
-    mode = sys.argv[1]
+    mode = args.mode
 
-    with open(sys.argv[2], "r") as f:
+    with open(args.config, "r") as f:
         params = json.load(f)
     conf = Configuration()
     conf.host = params["host"]
@@ -170,49 +178,63 @@ if __name__ == "__main__":
     with open("/etc/faasnap.json", "w") as f:
         json.dump(params["faasnap"], f, sort_keys=False, indent=4)
 
+    print("mode:", mode)
+    print("config:", args.config)
+    print("incremental:", args.incremental)
+    if args.exclude:
+        print("exclude:", args.exclude)
+        for func in args.exclude:
+            params["function"].remove(func)
     print("kernels:", params["faasnap"]["kernels"])
     print("vcpu:", params["vcpu"])
 
-    ssIds = {}
+    if args.incremental:
+        with open(os.path.join(params["test_dir"], f"snapshots_{mode}.json"), "r") as f:
+            ssIds = json.load(f)
+    else:
+        ssIds = {}
     setting = params["settings"][mode]
     client = faasnap.DefaultApi(faasnap.ApiClient(conf))
 
     for index, func in enumerate(params["function"], start=1):
-        print(f"========== preparing: {func} ==========")
-        add_network(client, index)
-        func_config = params["functions"][func]
-        func_param = func_config["params"][0]
-        namespace = f"fc{index}"
+        try:
+            print(f"========== preparing: {func} ==========")
+            add_network(client, index)
+            func_config = params["functions"][func]
+            func_param = func_config["params"][0]
+            namespace = f"fc{index}"
 
-        client.functions_post(
-            function=faasnap.Function(
-                func_name=func_config["name"],
-                image=func_config["image"],
-                kernel=setting["kernel"],
-                vcpu=params["vcpu"],
-            )
-        )
-
-        if mode == "faasnap":
-            ssIds[func] = prepare_faasnap(
-                params=params,
-                client=client,
-                setting=setting,
-                func_name=func,
-                func_param=func_param,
-                namespace=namespace,
-            )
-        elif mode == "reap":
-            ssIds[func] = prepare_reap(
-                params=params,
-                client=client,
-                setting=setting,
-                func_name=func,
-                func_param=func_param,
-                namespace=namespace,
+            client.functions_post(
+                function=faasnap.Function(
+                    func_name=func_config["name"],
+                    image=func_config["image"],
+                    kernel=setting["kernel"],
+                    vcpu=params["vcpu"],
+                )
             )
 
-        time.sleep(1)
+            if mode == "faasnap":
+                ssIds[func] = prepare_faasnap(
+                    params=params,
+                    client=client,
+                    setting=setting,
+                    func_name=func,
+                    func_param=func_param,
+                    namespace=namespace,
+                )
+            elif mode == "reap":
+                ssIds[func] = prepare_reap(
+                    params=params,
+                    client=client,
+                    setting=setting,
+                    func_name=func,
+                    func_param=func_param,
+                    namespace=namespace,
+                )
+
+            time.sleep(1)
+        except Exception as e:
+            print(e)
 
     print("========== DONE ==========")
     print("ssIds:", ssIds)
