@@ -276,6 +276,39 @@ func LoadSnapshot(req *http.Request, invoc *models.Invocation, reapId string) (*
 	return vm, nil
 }
 
+func LoadSnapshotReap(req *http.Request, invoc *models.Invocation) (*VM, error) {
+	snapshot, ok := ssManager.Snapshots[invoc.SsID]
+	if !ok {
+		log.Println("Snapshot not exists")
+		return nil, errors.New("Snapshot not exists")
+	}
+
+	reapId, err := reap.Register(req.Context(), invoc.SsID, snapshot.SnapshotBase, snapshot.SnapshotPath, snapshot.MemFilePath, snapshot.Size, invoc.WsFileDirectIo, invoc.WsSingleRead)
+	if err != nil {
+		log.Println("Register REAP failed", err.Error())
+		return nil, err
+	}
+	resultChan := make(chan error)
+	go func() {
+		err := reap.Activate(req, reapId)
+		if err != nil {
+			log.Println("Activate REAP failed", err.Error())
+		}
+		resultChan <- err
+	}()
+	vm, err := LoadSnapshot(req, invoc, reapId)
+	vmId := vm.VmId
+	if err != nil {
+		log.Println("Snapshot start invocation failed", err)
+		return nil, err
+	}
+	if err := <-resultChan; err != nil {
+		return nil, err
+	}
+	vmController.Machines[vmId].ReapId = reapId
+	return vm, nil
+}
+
 func ChangeSnapshot(req *http.Request, ssID string, digHole, loadCache, dropCache bool) error {
 	log.Println("ChangeSnapshot", ssID, digHole, loadCache, dropCache)
 	snapshot, ok := ssManager.Snapshots[ssID]
