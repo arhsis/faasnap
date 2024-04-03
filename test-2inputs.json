@@ -131,6 +131,7 @@
             "name": "reap",
             "prepare_steps": "reap",
             "invoke_steps": "reap",
+            "ws_file_direct_io": true,
             "patch_state": {
                 "dig_hole": false,
                 "load_cache": false,

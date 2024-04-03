@@ -222,7 +222,7 @@ func (m *MemoryManager) FetchState(ctx context.Context, vmID string) error {
 
 	logger := log.WithFields(log.Fields{"vmID": vmID})
 
-	logger.Info("Activating instance in the memory manager")
+	logger.Info("Fetching state in the memory manager")
 
 	var (
 		ok     bool

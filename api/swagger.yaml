@@ -289,6 +289,10 @@ paths:
           in: path
           type: string
           required: true
+        - name: mode
+          in: query
+          type: string
+          required: true
         - name: invocation
           in: body
           schema:

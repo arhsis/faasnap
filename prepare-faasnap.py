@@ -3,17 +3,17 @@ import os
 import time
 import sys
 import json
+import argparse
 
 sys.path.extend(["./python_client"])
 from swagger_client.api.default_api import DefaultApi
 import swagger_client as faasnap
 from swagger_client.configuration import Configuration
-from types import SimpleNamespace
 
 os.umask(0o777)
 
 
-def addNetwork(client: DefaultApi, idx: int):
+def add_network(client: DefaultApi, idx: int):
     ns = "fc%d" % idx
     guest_mac = "AA:FC:00:00:00:01"  # fixed MAC
     guest_addr = "172.16.0.2"  # fixed guest IP
@@ -30,7 +30,7 @@ def addNetwork(client: DefaultApi, idx: int):
     )
 
 
-def prepareMincore(
+def prepare_faasnap(
     params, client: DefaultApi, setting, func_name, func_param, namespace
 ):
     vm = client.vms_post(vm={"func_name": func_name, "namespace": namespace})
@@ -39,17 +39,17 @@ def prepareMincore(
         snapshot=faasnap.Snapshot(
             vm_id=vm.vm_id,
             snapshot_type="Full",
-            snapshot_path=params.test_dir + f"/{func_name}_full.snapshot",
-            mem_file_path=params.test_dir + f"/{func_name}_full.memfile",
+            snapshot_path=params["test_dir"] + f"/{func_name}_full.snapshot",
+            mem_file_path=params["test_dir"] + f"/{func_name}_full.memfile",
             version="0.23.0",
         )
     )
     client.vms_vm_id_delete(vm_id=vm.vm_id)
     client.snapshots_ss_id_patch(
-        ss_id=base_snap.ss_id, state=vars(setting.patch_base_state)
+        ss_id=base_snap.ss_id, state=setting["patch_base_state"]
     )  # drop cache
     time.sleep(2)
-    if setting.mincore_size > 0:
+    if setting["mincore_size"] > 0:
         mincore = -1
     else:
         mincore = 100
@@ -58,7 +58,7 @@ def prepareMincore(
         ss_id=base_snap.ss_id,
         params=func_param,
         mincore=mincore,
-        mincore_size=setting.mincore_size,
+        mincore_size=setting["mincore_size"],
         enable_reap=False,
         namespace=namespace,
         use_mem_file=True,
@@ -70,7 +70,7 @@ def prepareMincore(
         invocation=faasnap.Invocation(
             func_name="run",
             vm_id=newVmID,
-            params="{\"command\": \"echo 8 > /proc/sys/vm/drop_caches\"}",
+            params='{"command": "echo 8 > /proc/sys/vm/drop_caches"}',
             mincore=-1,
             enable_reap=False,
         )
@@ -79,10 +79,10 @@ def prepareMincore(
         snapshot=faasnap.Snapshot(
             vm_id=newVmID,
             snapshot_type="Full",
-            snapshot_path=params.test_dir + f"/{func_name}_warm.snapshot",
-            mem_file_path=params.test_dir + f"/{func_name}_warm.memfile",
+            snapshot_path=params["test_dir"] + f"/{func_name}_warm.snapshot",
+            mem_file_path=params["test_dir"] + f"/{func_name}_warm.memfile",
             version="0.23.0",
-            **vars(setting.record_regions),
+            **setting["record_regions"],
         )
     )
     client.vms_vm_id_delete(vm_id=newVmID)
@@ -90,16 +90,14 @@ def prepareMincore(
     client.snapshots_ss_id_mincore_put(
         ss_id=warm_snap.ss_id, source=base_snap.ss_id
     )  # carry over mincore to new snapshot
-    state = vars(setting.patch_mincore)
-    state["to_ws_file"] = params.test_dir + f"/{func_name}_wsfile"
-    client.snapshots_ss_id_mincore_patch(
-        ss_id=warm_snap.ss_id, state=state
-    )
+    state = setting["patch_mincore"]
+    state["to_ws_file"] = params["test_dir"] + f"/{func_name}_wsfile"
+    client.snapshots_ss_id_mincore_patch(ss_id=warm_snap.ss_id, state=state)
     client.snapshots_ss_id_patch(
-        ss_id=base_snap.ss_id, state=vars(setting.patch_base_state)
+        ss_id=base_snap.ss_id, state=setting["patch_base_state"]
     )  # drop cache
     client.snapshots_ss_id_patch(
-        ss_id=warm_snap.ss_id, state=vars(setting.patch_state)
+        ss_id=warm_snap.ss_id, state=setting["patch_state"]
     )  # drop cache
     client.snapshots_ss_id_mincore_patch(
         ss_id=warm_snap.ss_id, state={"drop_ws_cache": True}
@@ -108,58 +106,143 @@ def prepareMincore(
     return warm_snap.ss_id
 
 
+def prepare_reap(params, client: DefaultApi, setting, func_name, func_param, namespace):
+    vm = client.vms_post(vm={"func_name": func_name, "namespace": namespace})
+    time.sleep(5)
+    invoc = faasnap.Invocation(
+        func_name=func_name,
+        vm_id=vm.vm_id,
+        params=func_param,
+        mincore=-1,
+        enable_reap=False,
+    )
+    ret = client.invocations_post(invocation=invoc)
+    print("1st prepare invoc ret:", ret)
+    base = faasnap.Snapshot(
+        vm_id=vm.vm_id,
+        snapshot_type="Full",
+        snapshot_path=params["test_dir"] + f"/{func_name}_full.snapshot",
+        mem_file_path=params["test_dir"] + f"/{func_name}_full.memfile",
+        version="0.23.0",
+    )
+    base_snap = client.snapshots_post(snapshot=base)
+    client.vms_vm_id_delete(vm_id=vm.vm_id)
+    time.sleep(1)
+    client.snapshots_ss_id_patch(
+        ss_id=base_snap.ss_id, state=setting["patch_state"]
+    )  # drop cache
+    time.sleep(1)
+    invoc = faasnap.Invocation(
+        func_name=func_name,
+        ss_id=base_snap.ss_id,
+        params=func_param,
+        mincore=-1,
+        enable_reap=True,
+        ws_file_direct_io=setting["ws_file_direct_io"],
+        namespace=namespace,
+    )
+    ret = client.invocations_post(invocation=invoc)
+    print("2nd prepare invoc ret:", ret)
+    time.sleep(1)
+    client.vms_vm_id_delete(vm_id=ret.vm_id)
+    time.sleep(2)
+    client.snapshots_ss_id_patch(
+        ss_id=base_snap.ss_id, state=setting["patch_state"]
+    )  # drop cache
+    client.snapshots_ss_id_reap_patch(
+        ss_id=base_snap.ss_id, cache=False
+    )  # drop reap cache
+
+    return base_snap.ss_id
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: %s <test.json>" % sys.argv[0])
-        exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=["faasnap", "reap"], help="prepare for faasnap or reap")
+    parser.add_argument("config", help="config file")
+    parser.add_argument(
+        "--incremental", "-i",
+        action=argparse.BooleanOptionalAction,
+        help="incremental prepare",
+    )
+    parser.add_argument("--exclude", "-e", nargs="+", help="exclude functions")
+    args = parser.parse_args()
 
-    with open(sys.argv[1], "r") as f:
-        params = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
+    mode = args.mode
+
+    with open(args.config, "r") as f:
+        params = json.load(f)
     conf = Configuration()
-    conf.host = params.host
-
-    # params.settings.faasnap.patch_mincore.to_ws_file = params.test_dir + "/wsfile"
+    conf.host = params["host"]
 
     with open("/etc/faasnap.json", "w") as f:
-        json.dump(
-            params.faasnap, f, default=lambda o: o.__dict__, sort_keys=False, indent=4
-        )
+        json.dump(params["faasnap"], f, sort_keys=False, indent=4)
 
-    print("kernels:", params.faasnap.kernels)
-    print("vcpu:", params.vcpu)
+    print("mode:", mode)
+    print("config:", args.config)
+    print("incremental:", args.incremental)
+    if args.exclude:
+        print("exclude:", args.exclude)
+        for func in args.exclude:
+            params["function"].remove(func)
+    print("kernels:", params["faasnap"]["kernels"])
+    print("vcpu:", params["vcpu"])
 
-    ssIds = {}
-    setting = params.settings.faasnap
+    if args.incremental:
+        with open(os.path.join(params["test_dir"], f"snapshots_{mode}.json"), "r") as f:
+            ssIds = json.load(f)
+    else:
+        ssIds = {}
+    setting = params["settings"][mode]
     client = faasnap.DefaultApi(faasnap.ApiClient(conf))
 
-    for index, func in enumerate(params.function, start=1):
-        print(f"========== preparing: {func} ==========")
-        addNetwork(client, index)
-        func_config = vars(params.functions)[func]
-        client.functions_post(
-            function=faasnap.Function(
-                func_name=func_config.name,
-                image=func_config.image,
-                kernel=setting.kernel,
-                vcpu=params.vcpu,
+    for index, func in enumerate(params["function"], start=1):
+        if func in ssIds:
+            print(f"========== {func} already prepared ==========")
+            continue
+        try:
+            print(f"========== preparing: {func} ==========")
+            add_network(client, index)
+            func_config = params["functions"][func]
+            func_param = func_config["params"][0]
+            namespace = f"fc{index}"
+
+            client.functions_post(
+                function=faasnap.Function(
+                    func_name=func_config["name"],
+                    image=func_config["image"],
+                    kernel=setting["kernel"],
+                    vcpu=params["vcpu"],
+                )
             )
-        )
 
-        ssIds[func] = prepareMincore(
-            params=params,
-            client=client,
-            setting=setting,
-            func_name=func,
-            func_param=func_config.params[0],
-            namespace=f"fc{index}",
-        )
+            if mode == "faasnap":
+                ssIds[func] = prepare_faasnap(
+                    params=params,
+                    client=client,
+                    setting=setting,
+                    func_name=func,
+                    func_param=func_param,
+                    namespace=namespace,
+                )
+            elif mode == "reap":
+                ssIds[func] = prepare_reap(
+                    params=params,
+                    client=client,
+                    setting=setting,
+                    func_name=func,
+                    func_param=func_param,
+                    namespace=namespace,
+                )
 
-        time.sleep(1)
+            time.sleep(1)
+        except Exception as e:
+            print(e)
 
     print("========== DONE ==========")
     print("ssIds:", ssIds)
 
-    if not os.path.isdir(params.test_dir):
-        os.mkdir(params.test_dir)
-    with open(os.path.join(params.test_dir, "snapshots.json"), "w") as f:
-        json.dump(ssIds, f, default=lambda o: o.__dict__)
+    if not os.path.isdir(params["test_dir"]):
+        os.mkdir(params["test_dir"])
+    with open(os.path.join(params["test_dir"], f"snapshots_{mode}.json"), "w") as f:
+        json.dump(ssIds, f)

@@ -141,7 +141,15 @@ func configureAPI(api *operations.FaasnapAPI) http.Handler {
 		return &operations.PatchSnapshotsSsIDMincoreOK{}
 	})
 	api.PostSnapshotsSsIDHandler = operations.PostSnapshotsSsIDHandlerFunc(func(params operations.PostSnapshotsSsIDParams) middleware.Responder {
-		vm, err := daemon.LoadSnapshot(params.HTTPRequest, params.Invocation, "")
+		var vm *daemon.VM
+		var err error
+		if params.Mode == "faasnap" {
+			vm, err = daemon.LoadSnapshot(params.HTTPRequest, params.Invocation, "")
+		} else if params.Mode == "reap" {
+			vm, err = daemon.LoadSnapshotReap(params.HTTPRequest, params.Invocation)
+		} else {
+			return &operations.PostSnapshotsSsIDBadRequest{Payload: &operations.PostSnapshotsSsIDBadRequestBody{Message: "Invalid mode"}}
+		}
 		if err != nil {
 			return &operations.PostSnapshotsSsIDBadRequest{Payload: &operations.PostSnapshotsSsIDBadRequestBody{Message: err.Error()}}
 		}
@@ -239,7 +247,7 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	//var port = 8080
 	//var zipkinHost = "http://localhost:9411"
 
-  //registerZipkin(zipkinHost, port)
+	//registerZipkin(zipkinHost, port)
 	h := &ochttp.Handler{Handler: handler}
 	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
 		log.Fatal("Failed to register ochttp.DefaultServerViews")
