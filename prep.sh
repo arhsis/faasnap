@@ -11,7 +11,7 @@ sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 sudo iptables -t nat -A POSTROUTING -o "${IFACE}" -j MASQUERADE
 sudo iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
-for i in {1..12}; do sudo ./network.sh $i ;done
+for i in {1..13}; do sudo ./network.sh $i ;done
 # ./network.sh 1
 
 # docker run -d -p 9411:9411 openzipkin/zipkin
