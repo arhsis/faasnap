@@ -24,6 +24,7 @@ package reap
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -31,6 +32,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/ease-lab/vhive/metrics"
@@ -260,8 +262,9 @@ func (m *MemoryManager) Deactivate(vmID string) ([]uint64, error) {
 	logger.Info("Deactivating instance from the memory manager")
 
 	var (
-		state *SnapshotState
-		ok    bool
+		state      *SnapshotState
+		ok         bool
+		eventfdBuf = make([]byte, 8)
 	)
 
 	m.Lock()
@@ -283,7 +286,11 @@ func (m *MemoryManager) Deactivate(vmID string) ([]uint64, error) {
 		return nil, errors.New("VM not activated")
 	}
 
-	state.quitCh <- 0
+	_ = binary.PutUvarint(eventfdBuf, 1)
+	if n, err := syscall.Write(state.epEventFD, eventfdBuf); err != nil || n != 8 {
+		logger.Error("write to eventfd failed", err, n)
+		return nil, err
+	}
 	if err := state.unmapGuestMemory(); err != nil {
 		logger.Error("Failed to munmap guest memory")
 		return nil, err
