@@ -162,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("config", help="config file")
     parser.add_argument(
         "--incremental", "-i",
-        action=argparse.BooleanOptionalAction,
+        action='store_true',
         help="incremental prepare",
     )
     parser.add_argument("--exclude", "-e", nargs="+", help="exclude functions")

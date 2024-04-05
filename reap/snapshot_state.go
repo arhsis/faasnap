@@ -347,6 +347,10 @@ func (s *SnapshotState) pollUserPageFaults(readyCh chan int) {
 				goMsg := make([]byte, sizeOfUFFDMsg())
 
 				if nread, err := syscall.Read(fd, goMsg); err != nil || nread != len(goMsg) {
+					if errors.Is(err, syscall.EAGAIN) {
+						log.Warn("read from uffd return EAGAIN")
+						continue
+					}
 					if !errors.Is(err, syscall.EBADF) {
 						log.Fatalf("Read uffd_msg failed: %v", err)
 					}
