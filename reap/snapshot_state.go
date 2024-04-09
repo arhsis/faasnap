@@ -31,7 +31,6 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -341,7 +340,7 @@ outmost_loop:
 					logger.Warn("read from eventfd has error", err, nread)
 				}
 				val, _ := binary.Uvarint(eventfdVal)
-        logger.Info("recv eventfd val, break epool wait loop: ", val)
+				logger.Info("recv eventfd val, break epool wait loop: ", val)
 				break outmost_loop
 			}
 
@@ -536,6 +535,11 @@ func installRegion(fd int, src, dst, mode, len uint64) error {
 
 	err := ioctl(uintptr(fd), int(C.const_UFFDIO_COPY), unsafe.Pointer(&cUC))
 	if err != nil {
+		// these errors could be ignored
+		if errors.Is(err, syscall.EAGAIN) || errors.Is(err, syscall.ENOENT) ||
+			errors.Is(err, syscall.EEXIST) {
+			return nil
+		}
 		return err
 	}
 
@@ -553,7 +557,7 @@ func ioctl(fd uintptr, request int, argp unsafe.Pointer) error {
 		uintptr(argp),
 	)
 	if errno != 0 {
-		return os.NewSyscallError("ioctl", fmt.Errorf("%d", int(errno)))
+		return os.NewSyscallError("ioctl", errno)
 	}
 
 	return nil
