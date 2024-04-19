@@ -169,7 +169,9 @@ func (vc *VMController) AddNetwork(req *http.Request, namespace, hostDevName, if
 
 func (vc *VMController) StartVM(ctx *context.Context, function, kernel, image, namespace string, vcpu, memSize int) (string, error) {
 	_, span := trace.StartSpan(*ctx, "startVM_setup")
+	vc.Lock()
 	netIface, ok := vc.Networks[namespace]
+	vc.Unlock()
 	if !ok {
 		return "", fmt.Errorf("network %s not found", namespace)
 	}
@@ -293,6 +295,7 @@ func (vc *VMController) StopVM(req *http.Request, vmID string) error {
 				log.Println("Deactivate Reap:", err)
 				return err
 			}
+			log.Println("Deactivating Reap finish: ", vmID)
 			vm.Snapshot.records = make([]uint64, len(records))
 			copy(vm.Snapshot.records, records)
 		}
@@ -625,7 +628,9 @@ func (vc *VMController) startVMM(ctx context.Context, fcExecutable, namespace st
 	// 	log.Println(err)
 	// 	return nil, err
 	// }
+	vc.Lock()
 	netIface, ok := vc.Networks[namespace]
+	vc.Unlock()
 	if !ok {
 		return nil, fmt.Errorf("network %s not found", namespace)
 	}

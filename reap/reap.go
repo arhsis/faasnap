@@ -53,7 +53,7 @@ import (
 var mmanager *MemoryManager
 
 func Setup() {
-	runtime.GOMAXPROCS(16)
+	runtime.GOMAXPROCS(64)
 	mmCfg := MemoryManagerCfg{
 		MetricsModeOn: false,
 	}
