@@ -13,7 +13,7 @@ mkdir -p ./mountpoint
 cp $IN $TMPOUT
 
 sudo mount $TMPOUT mountpoint
-sudo mkdir mountpoint/app
+sudo mkdir -p mountpoint/app
 sudo cp -r guest/$LANGUAGE_ENV/* mountpoint/app/
 
 sudo umount mountpoint

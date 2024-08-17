@@ -1,0 +1,19 @@
+{
+    "log_level": "Warning",
+    "base_path": "/root/faasnap/vm",
+    "kernels": {
+        "v4.14": "/root/faasnap/vmlinux",
+        "sanpage": "/root/faasnap/vmlinux"
+    },
+    "images": {
+        "debian-python": "/root/faasnap/rootfs/debian-python-rootfs.ext4",
+        "debian-nodejs": "/root/faasnap/rootfs/debian-nodejs-rootfs.ext4"
+    },
+    "executables": {
+        "vanilla": "/root/faasnap/firecracker",
+        "uffd": "/root/faasnap/firecracker"
+    },
+    "redis_host": "",
+    "redis_passwd": ""
+}
+

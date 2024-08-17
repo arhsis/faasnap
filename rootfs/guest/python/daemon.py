@@ -1,3 +1,25 @@
+import sys, os, traceback
+
+VIRTUALENV_PATH = "/root/faas"
+
+try:
+    # if the directory 'virtualenv' is extracted out of a zip file
+    path_to_virtualenv = os.path.abspath(VIRTUALENV_PATH)
+    if os.path.isdir(path_to_virtualenv):
+        # activate the virtualenv using activate_this.py contained in the virtualenv
+        activate_this_file = path_to_virtualenv + "/bin/activate_this.py"
+        if os.path.exists(activate_this_file):
+            with open(activate_this_file) as f:
+                code = compile(f.read(), activate_this_file, "exec")
+                exec(code, dict(__file__=activate_this_file))
+        else:
+            sys.stderr.write("Invalid virtualenv. There does not include 'activate_this.py'.\n")
+            sys.exit(1)
+except Exception:
+    traceback.print_exc(file=sys.stderr, limit=0)
+    sys.exit(1)
+
+
 from flask import Flask, request, jsonify
 from waitress import serve
 import os

@@ -8,7 +8,9 @@ echo root:rootroot | chpasswd
 source /root/.bashrc
 npm config set registry https://registry.npmmirror.com
 pushd /app/
+export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 
 npm install express@4.16.2 body-parser@1.18.2 sharp@0.32.6
+unset http_proxy https_proxy
 popd
 
 mkdir -p /etc/systemd/system/serial-getty@ttyS0.service.d/
@@ -61,5 +63,5 @@ ln -s /dev/shm /usr/tmp
 chmod 644 /etc/systemd/system/function-daemon.service
 systemctl enable function-daemon.service
 
-systemctl disable systemd-timesyncd.service
+# systemctl disable systemd-timesyncd.service
 systemctl disable systemd-update-utmp.service
