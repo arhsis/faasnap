@@ -40,7 +40,7 @@ def addNetwork(client: DefaultApi, idx: int):
     ns = 'fc%d' % idx
     guest_mac = 'AA:FC:00:00:00:01' # fixed MAC
     guest_addr = '172.16.0.2' # fixed guest IP
-    unique_addr = '192.168.0.%d' % (idx+2)
+    unique_addr = '192.168.0.%d' % (idx+2) #[pxg] df x1
     client.net_ifaces_namespace_put(namespace=ns, interface={
         "host_dev_name": 'vmtap0',
         "iface_id": "eth0",
