@@ -572,6 +572,10 @@ func (snapshot *Snapshot) RecordRegions(ctx context.Context, sizeThreshold, inte
 		return err
 	}
 	snapshot.BlockSize = int(statfs.Bsize)
+	if snapshot.BlockSize != os.Getpagesize() {
+		log.Println("Block size is not equal to page size, using page size instead")
+		snapshot.BlockSize = os.Getpagesize()
+	}
 
 	mmap, err := unix.Mmap(int(f.Fd()), 0, int(snapshot.Size), unix.PROT_READ, unix.MAP_PRIVATE)
 	if err != nil {
