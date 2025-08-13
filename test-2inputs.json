@@ -1,29 +1,29 @@
 {
     "faasnap": {
         "log_level": "Warning",
-        "base_path": "/users/id_17/faasnap/vm",
+        "base_path": "/mnt/vm",
         "kernels": {
-            "v4.14": "/users/id_17/faasnap/vmlinux",
-            "sanpage": "/users/id_17/faasnap/vmlinux"
+            "v4.14": "/users/muhan/faasnap/vmlinux",
+            "sanpage": "/users/muhan/faasnap/vmlinux"
         },
         "images": {
-            "debian-python": "/users/id_17/faasnap/rootfs/debian-python-rootfs.ext4",
-            "debian-nodejs": "/users/id_17/faasnap/rootfs/debian-nodejs-rootfs.ext4"
+            "debian-python": "/users/muhan/faasnap/rootfs/debian-python-rootfs.ext4",
+            "debian-nodejs": "/users/muhan/faasnap/rootfs/debian-nodejs-rootfs.ext4"
         },
         "executables": {
-            "vanilla": "/users/id_17/faasnap/firecracker",
-            "uffd": "/users/id_17/faasnap/firecracker"
+            "vanilla": "/users/muhan/faasnap/firecracker",
+            "uffd": "/users/muhan/faasnap/firecracker"
         },
         "redis_host": "localhost",
         "redis_passwd": ""
     },
 
-    "home_dir": "/users/id_17/faasnap/faasnap",
+    "home_dir": "/users/muhan/faasnap/",
     "host": "http://localhost:8080",
     "trace_api": "http://localhost:9411/api/v2/trace",
-    "test_dir": "/users/id_17/faasnap/snapshot",
+    "test_dir": "/mnt/snapshot",
 
-    "repeat": 1,
+    "repeat": 5,
     "parallelism": [1],
     "par_snapshots": [1],
     "record_input": [0],
@@ -34,8 +34,6 @@
         "faasnap"
     ],
     "function": [
-        "h-memory",
-        "h-hello-world",
         "chameleon",
         "dynamic-html",
         "image-processing",

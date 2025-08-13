@@ -1,26 +1,27 @@
 {
     "faasnap": {
         "log_level": "Warning",
-        "base_path": "",
+        "base_path": "/mnt",
         "kernels": {
-            "v4.14": "",
-            "sanpage": ""
+            "v4.14": "/users/muhan/faasnap/vmlinux",
+            "sanpage": "/users/muhan/faasnap/vmlinux"
         },
         "images": {
-            "debian": ""
+            "debian-python": "/users/muhan/faasnap/rootfs/debian-python-rootfs.ext4",
+            "debian-nodejs": "/users/muhan/faasnap/rootfs/debian-nodejs-rootfs.ext4"
         },
         "executables": {
-            "vanilla": "",
-            "uffd": "/mnt/data/faasnap-firecracker/build/cargo_target/x86_64-unknown-linux-musl/debug/firecracker"
+            "vanilla": "/users/muhan/faasnap/firecracker",
+            "uffd": "/users/muhan/faasnap/firecracker"
         },
-        "redis_host": "",
+        "redis_host": "localhost",
         "redis_passwd": ""
     },
 
-    "home_dir": "",
-    "host": "http://<ip>:8080",
-    "trace_api": "http://<ip>:9411/api/v2/trace",
-    "test_dir": "",
+    "home_dir": "/users/muhan/faasnap",
+    "host": "http://localhost:8080",
+    "trace_api": "http://localhost:9411/api/v2/trace",
+    "test_dir": "/mnt",
 
     "repeat": 1,
     "parallelism": [1],
@@ -30,13 +31,9 @@
     "vcpu": 2,
 
     "setting": [
-        "vanilla",
-        "vanilla-cache",
-        "reap",
         "faasnap"
     ],
     "function": [
-        "ffmpeg",
         "json",
         "image",
         "matmul",
@@ -142,7 +139,7 @@
         "ffmpeg": {
             "id": "ffmpeg",
             "name": "ffmpeg",
-            "image": "debian",
+            "image": "debian-nodejs",
             "params": [
                 "{\"input_object_key\":\"100K.mp4\", \"output_object_key\":\"output-ffmpeg.mp4\"}",
                 "{\"input_object_key\":\"200K.mp4\", \"output_object_key\":\"output-ffmpeg.mp4\"}",
@@ -155,7 +152,7 @@
         "json": {
             "id": "json",
             "name": "json",
-            "image": "debian",
+            "image": "debian-nodejs",
             "params": [
                     "{\"input_object_key\":\"200K.json\"}",
                     "{\"input_object_key\":\"400K.json\"}",
@@ -168,7 +165,7 @@
         "image": {
             "id": "image",
             "name": "image",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"input_object_key\":\"100K.jpg\", \"output_object_key_prefix\": \"outputimg-\"}",
                 "{\"input_object_key\":\"200K.jpg\", \"output_object_key_prefix\": \"outputimg-\"}",
@@ -181,7 +178,7 @@
         "matmul": {
             "id": "matmul",
             "name": "matmul",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"n\":\"500\"}",
                 "{\"n\":\"700\"}",
@@ -194,7 +191,7 @@
         "pyaes": {
             "id": "pyaes",
             "name": "pyaes",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"length_of_message\":\"5000\", \"num_of_iterations\":\"1\"}",
                 "{\"length_of_message\":\"10000\", \"num_of_iterations\":\"1\"}",
@@ -207,7 +204,7 @@
         "chameleon": {
             "id": "chameleon",
             "name": "chameleon",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"num_of_rows\":\"100\", \"num_of_cols\":\"100\"}",
                 "{\"num_of_rows\":\"100\", \"num_of_cols\":\"200\"}",
@@ -220,7 +217,7 @@
         "compression": {
             "id": "compression",
             "name": "compression",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"input_object_key\":\"senators.json\", \"output_object_key\":\"compressed.zip\"}",
                 "{\"input_object_key\":\"prize.json\", \"output_object_key\":\"compressed.zip\"}",
@@ -233,7 +230,7 @@
         "recognition": {
             "id": "recognition",
             "name": "recognition",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"model_object_key\":\"resnet50-19c8e357.pth\", \"input_object_key\":\"100K.jpg\", \"output_object_key_prefix\": \"outputimg-\"}",
                 "{\"model_object_key\":\"resnet50-19c8e357.pth\", \"input_object_key\":\"200K.jpg\", \"output_object_key_prefix\": \"outputimg-\"}",
@@ -246,7 +243,7 @@
         "pagerank": {
             "id": "pagerank",
             "name": "pagerank",
-            "image": "debian",
+            "image": "debian-python",
             "params": [
                 "{\"size\":\"25000\"}",
                 "{\"size\":\"50000\"}",

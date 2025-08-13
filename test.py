@@ -40,7 +40,8 @@ def addNetwork(client: DefaultApi, idx: int):
     ns = 'fc%d' % idx
     guest_mac = 'AA:FC:00:00:00:01' # fixed MAC
     guest_addr = '172.16.0.2' # fixed guest IP
-    unique_addr = f"192.168.{idx//252+1}.{idx%252+3}"
+    # unique_addr = f"192.168.{idx//252+1}.{idx%252+3}"
+    unique_addr = '192.168.0.%d' % (idx+2)
     client.net_ifaces_namespace_put(namespace=ns, interface={
         "host_dev_name": 'vmtap0',
         "iface_id": "eth0",
@@ -57,7 +58,7 @@ def prepareVanilla(params, client: DefaultApi, setting, func, func_param, par_sn
     time.sleep(5)
     invoc = faasnap.Invocation(func_name=func.name, vm_id=vm.vm_id, params=func_param, mincore=-1, enable_reap=False)
     ret = client.invocations_post(invocation=invoc)
-    print('prepare invoc ret:', ret)
+    # print('prepare invoc ret:', ret)
     base = faasnap.Snapshot(vm_id=vm.vm_id, snapshot_type='Full', snapshot_path=params.test_dir+'/Full.snapshot', mem_file_path=params.test_dir+'/Full.memfile', version='0.23.0', **vars(setting.record_regions))
     base_snap = client.snapshots_post(snapshot=base)
     all_snaps.append(base_snap)
@@ -74,7 +75,7 @@ def prepareMincore(params, client: DefaultApi, setting, func, func_param, par_sn
     all_snaps = []
     vm = client.vms_post(vm={'func_name': func.name, 'namespace': 'fc%d' % 1})
     time.sleep(5)
-    base_snap = client.snapshots_post(snapshot=faasnap.Snapshot(vm_id=vm.vm_id, snapshot_type='Full', snapshot_path=params.test_dir+'/Full.snapshot', mem_file_path=params.test_dir+'/Full.memfile', version='0.23.0'))
+    base_snap = client.snapshots_post(snapshot=faasnap.Snapshot(vm_id=vm.vm_id, snapshot_type='Full', snapshot_path=params.test_dir+'/Full.snapshot', mem_file_path=params.test_dir+'/Full.memfile', version='0.23.0', **vars(setting.record_regions)))
     client.vms_vm_id_delete(vm_id=vm.vm_id)
     client.snapshots_ss_id_patch(ss_id=base_snap.ss_id, state=vars(setting.patch_base_state)) # drop cache
     time.sleep(2)
@@ -89,7 +90,7 @@ def prepareMincore(params, client: DefaultApi, setting, func, func_param, par_sn
     try:
         r = ret.to_dict()['result']
         r = json.loads(r)
-        print(f"prepare invoc func lat: {r['latency']}")
+        print(f"prepare Mincore invoc func lat: {r['latency']}")
     except Exception as e:
         print(f'prepare invoc func err: {e}')
     # print('prepare invoc ret:', ret)
@@ -116,7 +117,8 @@ def prepareReap(params, client: DefaultApi, setting, func, func_param, idx):
     time.sleep(5)
     invoc = faasnap.Invocation(func_name=func.name, vm_id=vm.vm_id, params=func_param, mincore=-1, enable_reap=False)
     ret = client.invocations_post(invocation=invoc)
-    print('1st prepare invoc ret:', ret)
+    # print('1st prepare invoc ret:', ret)
+    print("reap: 1st prepare invoc ret")
     base = faasnap.Snapshot(vm_id=vm.vm_id, snapshot_type='Full', snapshot_path=params.test_dir+'/Full.snapshot'+str(idx), mem_file_path=params.test_dir+'/Full.memfile'+str(idx), version='0.23.0')
     base_snap = client.snapshots_post(snapshot=base)
     client.vms_vm_id_delete(vm_id=vm.vm_id)
@@ -125,7 +127,8 @@ def prepareReap(params, client: DefaultApi, setting, func, func_param, idx):
     time.sleep(1)
     invoc = faasnap.Invocation(func_name=func.name, ss_id=base_snap.ss_id, params=func_param, mincore=-1, enable_reap=True, ws_file_direct_io=True, namespace='fc%d'%1)
     ret = client.invocations_post(invocation=invoc)
-    print('2nd prepare invoc ret:', ret)
+    # print('2nd prepare invoc ret:', ret)
+    print("reap: 2nd prepare invoc ret")
     time.sleep(1)
     client.vms_vm_id_delete(vm_id=ret.vm_id)
     time.sleep(2)
@@ -158,11 +161,14 @@ def prepareEmuMincore(params, client: DefaultApi, setting, func, func_param):
     return [snapshot.ss_id]
 
 def invoke(args):
-    params, setting, func, func_param, idx, ss_id, par, par_snap, record_input, test_input = args
+    params, setting, func, func_param, idx, ss_id, par, par_snap, record_input, test_input, repeat = args
+    storage_type = 'local'
+    if 'nfs-dir' in params.test_dir:
+        storage_type = 'nfs'
     if par > 1 or par_snap > 1:
-        runId = '%s_%s_%d_%d' % (setting.name, func.id, par, par_snap)
+        runId = '%s-%s_%s_%d_%d' % (setting.name, storage_type, func.id, par, par_snap)
     else:
-        runId = '%s_%s_%d%d' % (setting.name, func.id, record_input, test_input)
+        runId = '%s-%s_%s_%d%d' % (setting.name, storage_type, func.id, record_input, test_input)
     bpfpipe = None
     time.sleep(1)
     mcstate = None
@@ -198,15 +204,21 @@ def invoke(args):
     # print('invoke', runId, 'ret:', ret)
     time.sleep(2)
     if RESULT_DIR:
-        directory = '%s/%s/%s' % (RESULT_DIR, TESTID, runId)
+        # directory = '%s/%s/%s' % (RESULT_DIR, TESTID, runId)
+        directory = '%s/%s/%s/%s' % (RESULT_DIR, TESTID, runId, repeat)
         os.makedirs(directory, exist_ok=True)
+        # dump the result only
         with open('%s/%s.json' % (directory, trace_id), 'w+') as f:
-            resp = requests.get('%s/%s' % (params.trace_api, trace_id))
-            json.dump(resp.json(), f)
-        with open('%s/%s-mcstate.json' % (directory, trace_id), 'w+') as f:
-            json.dump([mcstate], f)
+            latency_data = {"latency": r["latency"]}
+            json.dump(latency_data, f)
+            
+        # with open('%s/%s.json' % (directory, trace_id), 'w+') as f:
+        #     resp = requests.get('%s/%s' % (params.trace_api, trace_id))
+        #     json.dump(resp.json(), f)
+        # with open('%s/%s-mcstate.json' % (directory, trace_id), 'w+') as f:
+        #     json.dump([mcstate], f)
 
-def run_snap(params, setting, par, par_snap, func, record_input, test_input):
+def run_snap(params, setting, par, par_snap, func, record_input, test_input, repeat):
     if par_snap > 1:
         assert(par == par_snap)
     client: DefaultApi
@@ -223,6 +235,7 @@ def run_snap(params, setting, par, par_snap, func, record_input, test_input):
 
     params0 = func.params[record_input]
     params1 = func.params[test_input]
+    print("run_snap: ", repeat,setting.prepare_steps)
     if setting.prepare_steps == 'vanilla':
         ssIds = prepareVanilla(params, client, setting, func, params0, par_snap=par_snap)
     elif setting.prepare_steps == 'mincore':
@@ -237,17 +250,26 @@ def run_snap(params, setting, par, par_snap, func, record_input, test_input):
     time.sleep(1)
     if PAUSE:
         input("Press Enter to start...")
+    print("run_snap: invoke", repeat)
+    # before really invoke, drop host page cache in order to understand performance of the nfs setting
+    # if 'nfs-dir' in params.test_dir:
+    if not 'vanilla-cache' in params.setting:
+        print("syncing, and drop page cache")
+        subprocess.run(['sync'], check=True)
+        subprocess.run(['sudo', 'sh', '-c', 'echo 3 > /proc/sys/vm/drop_caches'], check=True)
     with Pool(par) as p:
         if len(ssIds) > 1:
-            vector = [(params, setting, func, params1, idx, ssIds[idx-1], par, par_snap, record_input, test_input) for idx in range(1, 1+par)]
+            vector = [(params, setting, func, params1, idx, ssIds[idx-1], par, par_snap, record_input, test_input, repeat) for idx in range(1, 1+par)]
         else:
-            vector = [(params, setting, func, params1, idx, ssIds[0], par, par_snap, record_input, test_input) for idx in range(1, 1+par)]
+            vector = [(params, setting, func, params1, idx, ssIds[0], par, par_snap, record_input, test_input, repeat) for idx in range(1, 1+par)]
         p.map(invoke, vector)
     
     # input("Press Enter to finish...")
     snappipe.terminate()
     snappipe.wait()
     time.sleep(1)
+    print("\n=========%s : %s=========\n" % (setting.name, func.id))
+
 
 def invoke_warm(args):
     client: DefaultApi
@@ -275,8 +297,10 @@ def invoke_warm(args):
         directory = '%s/%s/%s' % (RESULT_DIR, TESTID, runId)
         os.makedirs(directory, exist_ok=True)
         with open('%s/%s.json' % (directory, trace_id), 'w+') as f:
-            resp = requests.get('%s/%s' % (params.trace_api, trace_id))
-            json.dump(resp.json(), f)
+            json.dump(r, f)
+        # with open('%s/%s.json' % (directory, trace_id), 'w+') as f:
+        #     resp = requests.get('%s/%s' % (params.trace_api, trace_id))
+        #     json.dump(resp.json(), f)
 
 def run_warm(params, setting, par, par_snap, func, record_input, test_input):
     client: DefaultApi
@@ -315,11 +339,11 @@ def run_warm(params, setting, par, par_snap, func, record_input, test_input):
 
 def run(params, setting, func, par, par_snap, repeat, record_input, test_input):
     for r in range(repeat):
-        print("\n=========%s %s: %d=========\n" % (setting.name, func.id, r))
+        print("\n=========%s %s: %d =========\n" % (setting.name, func.id, r))
         if setting.name == 'warm':
             run_warm(params, setting, par, par_snap, func, record_input, test_input)
         else:
-            run_snap(params, setting, par, par_snap, func, record_input, test_input)
+            run_snap(params, setting, par, par_snap, func, record_input, test_input, r)
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -340,11 +364,14 @@ if __name__ == '__main__':
     conf.host = params.host
     
     params.settings.faasnap.patch_mincore.to_ws_file = params.test_dir + '/wsfile'
-
+    storage_type = 'local'
+    if 'nfs-dir' in params.test_dir:
+        storage_type = 'nfs'
+    setting_str = params.setting[0]
     if RESULT_DIR:
         n = 1
         while True:
-            p = Path("%s/%s/tests-%d.json" % (RESULT_DIR, TESTID, n))
+            p = Path("%s/%s/tests-%s-%s-%d.json" % (RESULT_DIR, TESTID,setting_str,storage_type, n))
             if not p.exists():
                 break
             n += 1
@@ -361,9 +388,8 @@ if __name__ == '__main__':
     print("vcpu:", params.vcpu)
     print("record input:", params.record_input)
     print("test input:", params.test_input)
-    
-    for func in params.function:
-        for setting in params.setting:
+    for setting in params.setting:
+        for func in params.function:
             for par, par_snap in zip(params.parallelism, params.par_snapshots):
                 for record_input in params.record_input:
                     for test_input in params.test_input:
