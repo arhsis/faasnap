@@ -4,6 +4,7 @@ import time
 import sys
 import json
 import subprocess
+import psutil
 from enum import unique
 from multiprocessing.pool import Pool
 from pathlib import Path
@@ -218,7 +219,11 @@ def invoke(args):
         # with open('%s/%s-mcstate.json' % (directory, trace_id), 'w+') as f:
         #     json.dump([mcstate], f)
 
+
 def run_snap(params, setting, par, par_snap, func, record_input, test_input, repeat):
+    # Record memory usage before run_snap starts
+    memory_before = psutil.virtual_memory().used // 1024  # Convert to KB
+    
     if par_snap > 1:
         assert(par == par_snap)
     client: DefaultApi
@@ -264,12 +269,42 @@ def run_snap(params, setting, par, par_snap, func, record_input, test_input, rep
             vector = [(params, setting, func, params1, idx, ssIds[0], par, par_snap, record_input, test_input, repeat) for idx in range(1, 1+par)]
         p.map(invoke, vector)
     
+    memory_after = psutil.virtual_memory().used // 1024  # Convert to KB 
     # input("Press Enter to finish...")
     snappipe.terminate()
     snappipe.wait()
     time.sleep(1)
+    
+    # Record memory usage after run_snap completes
+    memory_usage = memory_after - memory_before
+    
     print("\n=========%s : %s=========\n" % (setting.name, func.id))
-
+    
+    # Save memory usage for this run
+    if RESULT_DIR:
+        storage_type = 'local'
+        if 'nfs-dir' in params.test_dir:
+            storage_type = 'nfs'
+        if par > 1 or par_snap > 1:
+            runId = '%s-%s_%s_%d_%d' % (setting.name, storage_type, func.id, par, par_snap)
+        else:
+            runId = '%s-%s_%s_%d%d' % (setting.name, storage_type, func.id, record_input, test_input)
+        
+        directory = '%s/%s/%s/%s' % (RESULT_DIR, TESTID, runId, repeat)
+        os.makedirs(directory, exist_ok=True)
+        
+        # Save memory usage for this run
+        memory_file = os.path.join(directory, 'run_memory_usage.json')
+        with open(memory_file, 'w') as f:
+            memory_data = {
+                "memory_before_kb": memory_before,
+                "memory_after_kb": memory_after,
+                "memory_usage_kb": memory_usage
+            }
+            json.dump(memory_data, f)
+        print(f"Run memory usage saved to {memory_file}: {memory_usage} KB")
+    
+    return memory_usage
 
 def invoke_warm(args):
     client: DefaultApi
@@ -343,8 +378,9 @@ def run(params, setting, func, par, par_snap, repeat, record_input, test_input):
         if setting.name == 'warm':
             run_warm(params, setting, par, par_snap, func, record_input, test_input)
         else:
-            run_snap(params, setting, par, par_snap, func, record_input, test_input, r)
-
+            memory_usage = run_snap(params, setting, par, par_snap, func, record_input, test_input, r)
+            print(f"Total memory usage for run {r}: {memory_usage} KB")
+        
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: %s <test.json>" % sys.argv[0])

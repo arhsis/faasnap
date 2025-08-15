@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     # Define the matrix of experiments
     # settings_to_run = ["vanilla"]
-    settings_to_run = ["faasnap", "vanilla", "vanilla-cache"]
+    settings_to_run = ["vanilla"]
     storage_configs = [
         {
             "name": "local",
@@ -76,16 +76,6 @@ if __name__ == "__main__":
             "is_nfs": True
         }
     ]
-    # Clear content under test_dir and base_path directories while preserving the directories themselves
-    for storage in storage_configs:
-        # Create directories if they don't exist
-        subprocess.run(['sudo', 'mkdir', '-p', storage['test_dir']], check=True)
-        subprocess.run(['sudo', 'mkdir', '-p', storage['base_path']], check=True)
-        
-        # Remove contents while preserving the directories
-        subprocess.run(['sudo', 'rm', '-rf', f"{storage['test_dir']}/*"], check=True)
-        subprocess.run(['sudo', 'rm', '-rf', f"{storage['base_path']}/*"], check=True)
-
     try:
         with open(base_config_file, 'r') as f:
             base_config_data = json.load(f)
@@ -107,6 +97,14 @@ if __name__ == "__main__":
     for setting in settings_to_run:
         for storage in storage_configs:
             print(f"Starting sub-experiment: Setting='{setting}', Storage='{storage['name']}'")
+            # Remove contents while preserving the directories
+            subprocess.run(['sudo', 'rm', '-rf', storage['test_dir']], check=True)
+            subprocess.run(['sudo', 'rm', '-rf', storage['base_path']], check=True)
+            subprocess.run(['sudo', 'sync'], check=True)
+            # Create directories if they don't exist
+            print(f"deleting.. {storage['test_dir']}, {storage['base_path']}")
+            subprocess.run(['sudo', 'mkdir', storage['test_dir']], check=True)
+            subprocess.run(['sudo', 'mkdir', storage['base_path']], check=True)
             run_experiment(base_config_data, setting, storage, test_id)
 
     print("All experiments finished.")
